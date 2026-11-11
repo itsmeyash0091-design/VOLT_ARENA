@@ -156,7 +156,7 @@ function Report({ r, choice, onReflect, pending }: { r: ResilienceReport; choice
   </div>;
 }
 
-export function ResilienceLab({ holdings }: { holdings: PortfolioHolding[] }) {
+export function ResilienceLab({ holdings, onResult }: { holdings: PortfolioHolding[]; onResult?: (r: ResilienceReport | undefined) => void }) {
   const settings = useGetGameSettings();
   const resilience = useAnalyzePortfolioResilience();
   const [confidence, setConfidence] = useState('');
@@ -190,6 +190,8 @@ export function ResilienceLab({ holdings }: { holdings: PortfolioHolding[] }) {
   const edit = (fn: (v: string) => void) => (v: string) => { fn(v); invalidate(); };
   const reflect = (choice: ResilienceInputReflection) => { setReflection(choice); submit(choice, true); };
   const s = settings.data;
+  const onResultRef = useRef(onResult); onResultRef.current = onResult;
+  useEffect(() => { onResultRef.current?.(result); }, [result]);
 
   return <section className="risk-analysis-section res-section enter" id="resilience-lab" aria-busy={resilience.isPending} data-testid="section-resilience-lab">
     <div className="risk-analysis-heading">

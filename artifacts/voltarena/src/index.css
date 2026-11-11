@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @plugin "@tailwindcss/typography";
@@ -446,7 +446,7 @@
   --accent: 39 76% 65%; --accent-foreground: 205 29% 17%; --destructive: 3 58% 47%;
   --destructive-foreground: 0 0% 100%; --input: 40 22% 82%; --ring: 167 44% 31%;
   --chart-1: 167 44% 31%; --chart-2: 39 76% 65%; --chart-3: 203 28% 39%; --chart-4: 3 58% 55%; --chart-5: 87 30% 52%;
-  --app-font-sans: 'DM Sans', sans-serif; --app-font-serif: 'Manrope', sans-serif; --app-font-mono: 'DM Mono', monospace;
+  --app-font-sans: 'JetBrains Mono', ui-monospace, monospace; --app-font-serif: 'Space Grotesk', sans-serif; --app-font-mono: 'JetBrains Mono', ui-monospace, monospace;
   --radius: 0.75rem; --elevate-1: rgba(31, 58, 65, .035); --elevate-2: rgba(31, 58, 65, .08);
 }
 .dark {

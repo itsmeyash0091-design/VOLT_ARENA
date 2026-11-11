@@ -14,3 +14,9 @@ For Stage 5 and following Stage 5 requests, preserve all 64 existing tests uncha
 **Why:** These are the user's explicit standing constraints for Stage 5, not optional visual preferences.
 
 **How to apply:** Carry these constraints into subsequent design briefs and reviews; presentation must not imply forecasts, real trading, or observed data where none exists.
+
+Use the user's five uploaded Stitch HTML exports and screenshots as the visual reference for Portfolio, Crash Analytics, Risk Lab, Simulator, and Report.
+
+**Why:** The user explicitly requested matching these supplied screens rather than exploring a new visual direction.
+
+**How to apply:** Match their typography, surfaces, navigation and layout, but not their illustrative financial figures, XP, badges, data-source claims, or advice. Those do not override the existing Python-only and provenance rules.

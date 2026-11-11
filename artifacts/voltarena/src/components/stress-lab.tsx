@@ -52,19 +52,19 @@ function PathCanvas({ mc, selected }: { mc: MonteCarloResult; selected: number }
       canvas.width = w * dpr; canvas.height = h * dpr;
       const ctx = canvas.getContext('2d'); if (!ctx) return;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.fillStyle = '#f7f6ef'; ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = '#0a0e17'; ctx.fillRect(0, 0, w, h);
       const span = hi - lo || 1;
       const y = (v: number) => h - 8 - ((v - lo) / span) * (h - 16);
-      ctx.strokeStyle = '#e2e2d6'; ctx.lineWidth = 1;
+      ctx.strokeStyle = '#262a34'; ctx.lineWidth = 1;
       for (let g = 0; g <= 4; g++) { const gy = 8 + (g * (h - 16)) / 4; ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(w, gy); ctx.stroke(); }
-      ctx.strokeStyle = 'rgba(50,122,104,0.07)'; ctx.lineWidth = 0.8;
+      ctx.strokeStyle = 'rgba(174,198,255,0.08)'; ctx.lineWidth = 0.8;
       const line = (vals: number[]) => {
         const step = vals.length > 1 ? w / (vals.length - 1) : 0;
         ctx.beginPath(); vals.forEach((v, i) => (i ? ctx.lineTo(i * step, y(v)) : ctx.moveTo(0, y(v)))); ctx.stroke();
       };
       for (const p of mc.paths) line(p.valuesInr);
       const sel = mc.paths[selected];
-      if (sel) { ctx.strokeStyle = '#c0573f'; ctx.lineWidth = 2; line(sel.valuesInr); }
+      if (sel) { ctx.strokeStyle = '#f26a1b'; ctx.lineWidth = 2; line(sel.valuesInr); }
     };
     draw();
     const ro = new ResizeObserver(draw); ro.observe(canvas);
@@ -155,7 +155,7 @@ function Report({ r }: { r: PortfolioStressReport }) {
   </div>;
 }
 
-export function StressLab({ holdings }: { holdings: PortfolioHolding[] }) {
+export function StressLab({ holdings, onResult }: { holdings: PortfolioHolding[]; onResult?: (r: PortfolioStressReport | undefined) => void }) {
   const library = useGetStaticScenarios();
   const stress = useRunPortfolioStress();
   const [scenarioId, setScenarioId] = useState('');
@@ -190,6 +190,8 @@ export function StressLab({ holdings }: { holdings: PortfolioHolding[] }) {
   };
   const edit = (fn: (v: string) => void) => (v: string) => { fn(v); invalidate(); };
   const bounds = lib?.shockBoundsPct;
+  const onResultRef = useRef(onResult); onResultRef.current = onResult;
+  useEffect(() => { onResultRef.current?.(result); }, [result]);
 
   return <section className="risk-analysis-section stress-section enter" id="stress-lab" aria-busy={stress.isPending} data-testid="section-stress-lab">
     <div className="risk-analysis-heading">

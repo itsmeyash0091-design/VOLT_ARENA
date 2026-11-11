@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Activity,
   AlertCircle,
@@ -159,10 +159,12 @@ function RiskReport({ report }: { report: PortfolioRiskAnalysisReport }) {
   </div>;
 }
 
-export function RiskAnalysis({ holdings, confirmed }: { holdings: PortfolioHolding[]; confirmed: boolean }) {
+export function RiskAnalysis({ holdings, confirmed, onResult }: { holdings: PortfolioHolding[]; confirmed: boolean; onResult?: (r: PortfolioRiskAnalysisReport | undefined) => void }) {
   const analysis = useAnalyzePortfolioRisk();
   const [result, setResult] = useState<PortfolioRiskAnalysisReport>();
   const [error, setError] = useState('');
+  const onResultRef = useRef(onResult); onResultRef.current = onResult;
+  useEffect(() => { onResultRef.current?.(result); }, [result]);
 
   const requestAnalysis = () => {
     if (!confirmed || holdings.length === 0 || analysis.isPending) return;
