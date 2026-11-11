@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "VoltArena"
+description = "A session-only portfolio data and history inspector for Indian-listed stocks and ETFs, with transparent Yahoo Finance source coverage and data-quality warnings."
+version = "1.0.0"
+id = "artifacts/voltarena"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21495
+
+[services.development]
+run = "pnpm --filter @workspace/voltarena run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/voltarena", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/voltarena/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21495"
+BASE_PATH = "/"

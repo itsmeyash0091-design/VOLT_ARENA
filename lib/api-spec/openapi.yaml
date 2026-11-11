@@ -3,13 +3,15 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: VoltArena session-only portfolio data inspection API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: portfolio
+    description: Session-only portfolio input and market-data inspection
 paths:
   /healthz:
     get:
@@ -24,6 +26,101 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /market-data/universe:
+    get:
+      operationId: getMarketDataUniverse
+      tags: [portfolio]
+      summary: Get configured Indian market symbols
+      responses:
+        "200":
+          description: Configured symbols and their default instrument details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketDataUniverse"
+  /portfolio/csv-preview:
+    post:
+      operationId: previewPortfolioCsv
+      tags: [portfolio]
+      summary: Parse a CSV in memory and suggest column mappings
+      description: Portfolio CSV content is processed in memory only and is not stored.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CsvPreviewInput"
+      responses:
+        "200":
+          description: CSV headers, rows, and suggested mappings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CsvPreviewReport"
+        "400":
+          description: CSV is invalid or exceeds input limits
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioInputError"
+  /portfolio/validate:
+    post:
+      operationId: validatePortfolioInput
+      tags: [portfolio]
+      summary: Validate portfolio rows without fetching market data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PortfolioInspectInput"
+      responses:
+        "200":
+          description: Normalized rows and row-specific validation issues
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioValidationReport"
+        "400":
+          description: Portfolio input could not be validated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioInputError"
+  /portfolio/inspect:
+    post:
+      operationId: inspectPortfolioMarketData
+      tags: [portfolio]
+      summary: Validate a confirmed portfolio and inspect its market history
+      description: >
+        This endpoint is called only after the user confirms the portfolio.
+        It does not persist holdings. Market history comes from Yahoo Finance
+        through yfinance and is reported with per-instrument provenance.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PortfolioInspectInput"
+      responses:
+        "200":
+          description: Per-instrument market history and data-quality report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioInspectReport"
+        "400":
+          description: Invalid portfolio input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioInputError"
+        "502":
+          description: Market-data provider could not be reached
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioInputError"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +130,303 @@ components:
           type: string
       required:
         - status
+    InstrumentType:
+      type: string
+      enum: [stock, etf]
+    Exchange:
+      type: string
+      enum: [NSE, BSE]
+    PortfolioHolding:
+      type: object
+      properties:
+        ticker:
+          type: string
+          minLength: 1
+          maxLength: 20
+          pattern: "^[A-Za-z0-9][A-Za-z0-9.&_-]*$"
+        exchange:
+          $ref: "#/components/schemas/Exchange"
+        instrumentType:
+          $ref: "#/components/schemas/InstrumentType"
+        quantity:
+          type: string
+          minLength: 1
+          maxLength: 32
+      required: [ticker, exchange, instrumentType, quantity]
+    PortfolioInspectInput:
+      type: object
+      properties:
+        holdings:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items:
+            $ref: "#/components/schemas/PortfolioHolding"
+      required: [holdings]
+    CsvPreviewInput:
+      type: object
+      properties:
+        csvText:
+          type: string
+          minLength: 1
+          maxLength: 80000
+      required: [csvText]
+    CsvPreviewRow:
+      type: object
+      properties:
+        rowNumber:
+          type: integer
+          minimum: 2
+        cells:
+          type: array
+          items:
+            type: string
+      required: [rowNumber, cells]
+    CsvColumnMappingSuggestions:
+      type: object
+      properties:
+        tickerColumn:
+          type: ["string", "null"]
+        quantityColumn:
+          type: ["string", "null"]
+        exchangeColumn:
+          type: ["string", "null"]
+        instrumentTypeColumn:
+          type: ["string", "null"]
+      required: [tickerColumn, quantityColumn, exchangeColumn, instrumentTypeColumn]
+    CsvPreviewReport:
+      type: object
+      properties:
+        columns:
+          type: array
+          items:
+            type: string
+        rows:
+          type: array
+          items:
+            $ref: "#/components/schemas/CsvPreviewRow"
+        rowCount:
+          type: integer
+          minimum: 0
+        suggestedMapping:
+          $ref: "#/components/schemas/CsvColumnMappingSuggestions"
+        note:
+          type: string
+      required: [columns, rows, rowCount, suggestedMapping, note]
+    PortfolioValidatedHolding:
+      type: object
+      properties:
+        ticker:
+          type: string
+        exchange:
+          $ref: "#/components/schemas/Exchange"
+        instrumentType:
+          $ref: "#/components/schemas/InstrumentType"
+        quantity:
+          type: number
+          exclusiveMinimum: 0
+      required: [ticker, exchange, instrumentType, quantity]
+    PortfolioInputIssue:
+      type: object
+      properties:
+        row:
+          type: integer
+          minimum: 1
+        code:
+          type: string
+        message:
+          type: string
+      required: [row, code, message]
+    PortfolioInputError:
+      type: object
+      properties:
+        error:
+          type: string
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/PortfolioInputIssue"
+      required: [error]
+    PortfolioValidationReport:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        holdings:
+          type: array
+          items:
+            $ref: "#/components/schemas/PortfolioValidatedHolding"
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/PortfolioInputIssue"
+      required: [valid, holdings, issues]
+    MarketUniverseInstrument:
+      type: object
+      properties:
+        ticker:
+          type: string
+        exchange:
+          $ref: "#/components/schemas/Exchange"
+        instrumentType:
+          $ref: "#/components/schemas/InstrumentType"
+      required: [ticker, exchange, instrumentType]
+    MarketDataUniverse:
+      type: object
+      properties:
+        source:
+          type: string
+        instruments:
+          type: array
+          items:
+            $ref: "#/components/schemas/MarketUniverseInstrument"
+      required: [source, instruments]
+    DataGap:
+      type: object
+      properties:
+        previousDate:
+          type: string
+          format: date
+        nextDate:
+          type: string
+          format: date
+        calendarDays:
+          type: integer
+        note:
+          type: string
+      required: [previousDate, nextDate, calendarDays, note]
+    SuspiciousJump:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        priceBasis:
+          type: string
+          enum: [adjusted_close, close]
+        percentChange:
+          type: number
+        note:
+          type: string
+      required: [date, priceBasis, percentChange, note]
+    SplitEvent:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        ratio:
+          type: number
+      required: [date, ratio]
+    InstrumentMarketReport:
+      type: object
+      properties:
+        ticker:
+          type: string
+        exchange:
+          $ref: "#/components/schemas/Exchange"
+        instrumentType:
+          $ref: "#/components/schemas/InstrumentType"
+        yahooSymbol:
+          type: string
+        status:
+          type: string
+          enum: [success, skipped]
+        skipReason:
+          type: ["string", "null"]
+        dataType:
+          type: string
+          enum: [observed, proxy, insufficient]
+        proxyInstrument:
+          type: ["string", "null"]
+        proxyStartDate:
+          type: ["string", "null"]
+          format: date
+        proxyEndDate:
+          type: ["string", "null"]
+          format: date
+        coverageStart:
+          type: ["string", "null"]
+          format: date
+        coverageEnd:
+          type: ["string", "null"]
+          format: date
+        asOfDate:
+          type: ["string", "null"]
+          format: date
+        observationCount:
+          type: integer
+          minimum: 0
+        adjustedCloseCount:
+          type: integer
+          minimum: 0
+        missingAdjustedCloseCount:
+          type: integer
+          minimum: 0
+        calendarGaps:
+          type: array
+          items:
+            $ref: "#/components/schemas/DataGap"
+        suspiciousJumps:
+          type: array
+          items:
+            $ref: "#/components/schemas/SuspiciousJump"
+        splits:
+          type: array
+          items:
+            $ref: "#/components/schemas/SplitEvent"
+        adjustmentConcerns:
+          type: array
+          items:
+            type: string
+      required:
+        - ticker
+        - exchange
+        - instrumentType
+        - yahooSymbol
+        - status
+        - skipReason
+        - dataType
+        - proxyInstrument
+        - proxyStartDate
+        - proxyEndDate
+        - coverageStart
+        - coverageEnd
+        - asOfDate
+        - observationCount
+        - adjustedCloseCount
+        - missingAdjustedCloseCount
+        - calendarGaps
+        - suspiciousJumps
+        - splits
+        - adjustmentConcerns
+    PortfolioInspectSummary:
+      type: object
+      properties:
+        requested:
+          type: integer
+        succeeded:
+          type: integer
+        skipped:
+          type: integer
+      required: [requested, succeeded, skipped]
+    PortfolioInspectReport:
+      type: object
+      properties:
+        source:
+          type: string
+        checkedAt:
+          type: string
+          format: date-time
+        summary:
+          $ref: "#/components/schemas/PortfolioInspectSummary"
+        instruments:
+          type: array
+          items:
+            $ref: "#/components/schemas/InstrumentMarketReport"
+        dataNotes:
+          type: array
+          items:
+            type: string
+      required: [source, checkedAt, summary, instruments, dataNotes]
 
