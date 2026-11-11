@@ -7,6 +7,7 @@
  */
 import type { InstrumentMarketReport } from './instrumentMarketReport';
 import type { PortfolioInspectSummary } from './portfolioInspectSummary';
+import type { PortfolioValuation } from './portfolioValuation';
 
 export interface PortfolioInspectReport {
   source: string;
@@ -14,4 +15,5 @@ export interface PortfolioInspectReport {
   summary: PortfolioInspectSummary;
   instruments: InstrumentMarketReport[];
   dataNotes: string[];
+  valuation?: PortfolioValuation;
 }

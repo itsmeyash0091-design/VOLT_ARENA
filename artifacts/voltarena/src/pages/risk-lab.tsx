@@ -61,7 +61,7 @@ function PathsCanvas({ mc, selected }: { mc: MonteCarloResult; selected: number 
   return <canvas ref={ref} className="rl-canvas" role="img" aria-label={`All ${mc.paths.length} simulated paths drawn; path ${selected} highlighted.`} data-testid="canvas-monte-carlo" />;
 }
 
-export function RiskLab({ holdings, inspectionKey }: { holdings: PortfolioHolding[]; inspectionKey?: string }) {
+export function RiskLab({ holdings, inspectionKey, onCompleted }: { holdings: PortfolioHolding[]; inspectionKey?: string; onCompleted?: () => void }) {
   const library = useGetStaticScenarios();
   const stress = useRunPortfolioStress();
   const risk = useAnalyzePortfolioRisk();
@@ -94,7 +94,7 @@ export function RiskLab({ holdings, inspectionKey }: { holdings: PortfolioHoldin
     const id = ++stressReq.current;
     setStressReport(undefined); setStressError('');
     stress.mutate({ data }, {
-      onSuccess: (r) => { if (id === stressReq.current) { setStressReport(r); setSelected(0); } },
+      onSuccess: (r) => { if (id === stressReq.current) { setStressReport(r); setSelected(0); if (r.scenario.status === 'available' || r.reverseStress.status === 'available' || r.monteCarlo.status !== 'unavailable') onCompleted?.(); } },
       onError: (e) => { if (id === stressReq.current) setStressError(errText(e)); },
     });
   };
@@ -103,7 +103,7 @@ export function RiskLab({ holdings, inspectionKey }: { holdings: PortfolioHoldin
     const id = ++riskReq.current;
     setRiskReport(undefined); setRiskError('');
     risk.mutate({ data: { holdings } }, {
-      onSuccess: (r) => { if (id === riskReq.current) setRiskReport(r); },
+      onSuccess: (r) => { if (id === riskReq.current) { setRiskReport(r); if (r.riskContribution.status !== 'unavailable') onCompleted?.(); } },
       onError: (e) => { if (id === riskReq.current) setRiskError(errText(e)); },
     });
   };

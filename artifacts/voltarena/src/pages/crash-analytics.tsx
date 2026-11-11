@@ -29,7 +29,7 @@ function errorMessage(error: unknown): string {
   return 'The analysis service could not complete the replay.';
 }
 
-export function CrashAnalytics({ holdings, inspectionKey, onReturn }: { holdings: PortfolioHolding[]; inspectionKey?: string; onReturn: () => void }) {
+export function CrashAnalytics({ holdings, inspectionKey, onReturn, onCompleted }: { holdings: PortfolioHolding[]; inspectionKey?: string; onReturn: () => void; onCompleted?: () => void }) {
   const analyze = useAnalyzePortfolioRisk();
   const reqId = useRef(0);
   const [report, setReport] = useState<PortfolioRiskAnalysisReport>();
@@ -58,7 +58,7 @@ export function CrashAnalytics({ holdings, inspectionKey, onReturn }: { holdings
     const id = ++reqId.current;
     setError('');
     analyze.mutate({ data: { holdings } }, {
-      onSuccess: (r) => { if (id === reqId.current) { setReport(r); setIdx(0); } },
+      onSuccess: (r) => { if (id === reqId.current) { setReport(r); setIdx(0); if (r.replayWindows.some((w) => w.status !== 'unavailable')) onCompleted?.(); } },
       onError: (e) => { if (id === reqId.current) setError(errorMessage(e)); },
     });
   };

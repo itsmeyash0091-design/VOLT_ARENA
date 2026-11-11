@@ -42,3 +42,11 @@ The same symbols, holdings, seed and coverage dates do not prove identical marke
 **Why:** Deterministic calculations cannot guarantee a third-party live feed will return byte-identical adjusted history.
 
 **How to apply:** Compare input digests before attributing changes to random sampling. Disclose live-source variation; do not round or fill observed prices merely to force agreement. A future public-data snapshot policy needs explicit documentation, not a false claim of live-feed repeatability.
+
+## Portfolio snapshot versus adjusted return history
+
+Use observed unadjusted Close for quantity-based dashboard valuation at a common available date. Keep adjusted-return history for risk analysis separate. A complete total must not mix dates or silently omit unpriced holdings.
+
+**Why:** Adjusted Close includes historical corporate-action/return adjustments and is not interchangeable with the actual price at which today's held units are valued. Summing only priced holdings would misrepresent missing data as a full portfolio.
+
+**How to apply:** Display the snapshot date and source limitations. Short history can support a snapshot even when it is insufficient for simulations. Learning badges are session activity indicators, not investment skill or substitutes for Python CVaR Levels.

@@ -203,12 +203,57 @@ export interface PortfolioInspectSummary {
   skipped: number;
 }
 
+export type PortfolioValuationStatus = typeof PortfolioValuationStatus[keyof typeof PortfolioValuationStatus];
+
+
+export const PortfolioValuationStatus = {
+  complete: 'complete',
+  unavailable: 'unavailable',
+} as const;
+
+export interface ValuedHolding {
+  ticker: string;
+  exchange: Exchange;
+  instrumentType: InstrumentType;
+  quantity: number;
+  /** @nullable */
+  priceInr: number | null;
+  /** @nullable */
+  asOfDate: string | null;
+  /** @nullable */
+  valueInr: number | null;
+  /** @nullable */
+  weightPct: number | null;
+  /** @nullable */
+  reason: string | null;
+}
+
+export interface ValuationAllocation {
+  instrumentType: InstrumentType;
+  valueInr: number;
+  weightPct: number;
+}
+
+export interface PortfolioValuation {
+  status: PortfolioValuationStatus;
+  /** @nullable */
+  asOfDate: string | null;
+  /** @nullable */
+  totalValueInr: number | null;
+  holdings: ValuedHolding[];
+  allocations: ValuationAllocation[];
+  /** @nullable */
+  reason: string | null;
+  notes: string[];
+}
+
 export interface PortfolioInspectReport {
   source: string;
   checkedAt: string;
   summary: PortfolioInspectSummary;
   instruments: InstrumentMarketReport[];
   dataNotes: string[];
+  valuation?: PortfolioValuation;
 }
 
 export type RiskInstrumentCoverageDataType = typeof RiskInstrumentCoverageDataType[keyof typeof RiskInstrumentCoverageDataType];

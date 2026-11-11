@@ -182,7 +182,30 @@ export const InspectPortfolioMarketDataResponse = zod.object({
 })),
   "adjustmentConcerns": zod.array(zod.string())
 })),
-  "dataNotes": zod.array(zod.string())
+  "dataNotes": zod.array(zod.string()),
+  "valuation": zod.object({
+  "status": zod.enum(['complete', 'unavailable']),
+  "asOfDate": zod.string().nullable(),
+  "totalValueInr": zod.number().nullable(),
+  "holdings": zod.array(zod.object({
+  "ticker": zod.string(),
+  "exchange": zod.enum(['NSE', 'BSE']),
+  "instrumentType": zod.enum(['stock', 'etf']),
+  "quantity": zod.number(),
+  "priceInr": zod.number().nullable(),
+  "asOfDate": zod.string().nullable(),
+  "valueInr": zod.number().nullable(),
+  "weightPct": zod.number().nullable(),
+  "reason": zod.string().nullable()
+})),
+  "allocations": zod.array(zod.object({
+  "instrumentType": zod.enum(['stock', 'etf']),
+  "valueInr": zod.number(),
+  "weightPct": zod.number()
+})),
+  "reason": zod.string().nullable(),
+  "notes": zod.array(zod.string())
+}).optional()
 })
 
 

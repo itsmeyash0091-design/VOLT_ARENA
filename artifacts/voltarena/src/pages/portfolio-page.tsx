@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent, type ReactNode } from 'react';
 import {
   BadgeCheck, BarChart3, ClipboardCheck, CloudLightning, CloudUpload, FlaskConical, LayoutDashboard,
-  LoaderCircle, Lock, Plus, Radar, Siren, TrendingUp, User, X,
+  LoaderCircle, Lock, Pencil, Plus, Radar, Siren, TrendingUp, User, X,
 } from 'lucide-react';
 import {
   useGetMarketDataUniverse,
   usePreviewPortfolioCsv,
   useValidatePortfolioInput,
   useInspectPortfolioMarketData,
+  useAnalyzePortfolioResilience,
 } from '@workspace/api-client-react';
 import type {
-  Exchange, InstrumentType, PortfolioInspectReport, ResilienceReport, CsvPreviewReport, PortfolioInputIssue, InstrumentMarketReport,
+  Exchange, InstrumentType, PortfolioInspectReport, ResilienceReport, CsvPreviewReport, PortfolioInputIssue, InstrumentMarketReport, ValuedHolding,
 } from '@workspace/api-client-react';
 import { CrashAnalytics } from './crash-analytics';
 import { RiskLab } from './risk-lab';
@@ -40,6 +41,16 @@ const fieldNames: Record<FieldKey, string> = { ticker: 'Ticker', exchange: 'Exch
 const emptyMap: Record<FieldKey, string> = { ticker: '', exchange: '', instrumentType: '', quantity: '' };
 const tickerRe = /^[A-Z0-9][A-Z0-9.&_-]{0,19}$/;
 const nodeSlots = ['n1', 'n2', 'n3', 'n4'];
+type Milestone = 'inspect' | 'crash' | 'risk' | 'rehearsal' | 'report';
+const milestoneList: { id: Milestone; label: string }[] = [
+  { id: 'inspect', label: 'Portfolio confirmed and price history inspected' },
+  { id: 'crash', label: 'Crash replay analysed with at least one available window' },
+  { id: 'risk', label: 'Risk Lab returned an available stress, simulation or contributor result' },
+  { id: 'rehearsal', label: 'Simulator rehearsal revealed' },
+  { id: 'report', label: 'Report viewed with an analysis-service result' },
+];
+const inrFmt = (v: number | null | undefined) => v === null || v === undefined ? '—' : `₹${v.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+const pctFmt = (v: number) => `${v.toLocaleString('en-IN', { maximumFractionDigits: 2 })}%`;
 
 function errorMessage(error: unknown): string {
   if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') return error.message;
@@ -63,6 +74,8 @@ export default function PortfolioPage() {
   const preview = usePreviewPortfolioCsv();
   const validate = useValidatePortfolioInput();
   const inspect = useInspectPortfolioMarketData();
+  const levelRun = useAnalyzePortfolioResilience();
+  const levelReq = useRef(0);
   const fileRef = useRef<HTMLInputElement>(null);
   const inputRevision = useRef(0);
 
@@ -97,6 +110,13 @@ export default function PortfolioPage() {
     setResilience(r ? { key, result: r } : undefined);
   };
   const sessionResilience = resilience && resilience.key === report?.checkedAt ? resilience.result : undefined;
+  const [editingId, setEditingId] = useState<string>();
+  const [levelError, setLevelError] = useState('');
+  const [milestones, setMilestones] = useState<{ key: string; done: Milestone[] }>();
+  const mark = (key: string | undefined) => (m: Milestone) => {
+    if (!key || key !== inspectionKeyRef.current) return;
+    setMilestones((cur) => cur && cur.key === key ? (cur.done.includes(m) ? cur : { key, done: [...cur.done, m] }) : { key, done: [m] });
+  };
 
   useEffect(() => {
     const on = () => setStation(readHash());
@@ -109,7 +129,7 @@ export default function PortfolioPage() {
   const sampleInstrument = configured.find((i) => i.ticker === 'VEDL' && i.exchange === 'NSE' && i.instrumentType === 'stock');
   const sampleLoaded = holdings.some((h) => h.rowId === sampleRowId);
 
-  const invalidate = () => { inputRevision.current += 1; setResilience(undefined); setReport(undefined); setReportError(''); setShowConfirm(false); setIssues([]); setValidationError(''); };
+  const invalidate = () => { inputRevision.current += 1; levelReq.current += 1; setLevelError(''); setMilestones(undefined); setResilience(undefined); setReport(undefined); setReportError(''); setShowConfirm(false); setIssues([]); setValidationError(''); };
 
   const addManual = () => {
     if (inspect.isPending) return;
@@ -119,20 +139,35 @@ export default function PortfolioPage() {
     const qty = Number(quantity);
     if (!tickerRe.test(t) || !Number.isFinite(qty) || qty <= 0) { setManualError('Enter a valid symbol and a positive quantity.'); return; }
     if (price.trim() && (!Number.isFinite(Number(price)) || Number(price) < 0)) { setManualError('Purchase price must be a finite positive number or zero, or leave it blank.'); return; }
-    if (holdings.length >= 50) { setManualError('A session supports at most 50 holdings.'); return; }
-    if (holdings.some((h) => h.ticker === t && h.exchange === ex)) { setManualError(`${t} on ${ex} is already in this session.`); return; }
+    if (!editingId && holdings.length >= 50) { setManualError('A session supports at most 50 holdings.'); return; }
+    if (holdings.some((h) => h.rowId !== editingId && h.ticker === t && h.exchange === ex)) { setManualError(`${t} on ${ex} is already in this session.`); return; }
     setManualError('');
-    setHoldings((cur) => [...cur, { rowId: crypto.randomUUID(), ticker: t, exchange: ex, instrumentType, quantity: quantity.trim(), purchasePrice: price.trim() || undefined }]);
+    const next = { ticker: t, exchange: ex, instrumentType, quantity: quantity.trim(), purchasePrice: price.trim() || undefined };
+    if (editingId) {
+      if (!holdings.some((h) => h.rowId === editingId)) { setManualError('That holding is no longer in this session.'); setEditingId(undefined); return; }
+      setHoldings((cur) => cur.map((h) => h.rowId === editingId ? { ...h, ...next } : h));
+      if (editingId === sampleRowId) setSampleRowId(undefined);
+      setEditingId(undefined);
+    } else setHoldings((cur) => [...cur, { rowId: crypto.randomUUID(), ...next }]);
     setSymbol(''); setQuantity(''); setPrice('');
     invalidate();
   };
 
+  const startEdit = (rowId: string) => {
+    if (inspect.isPending) return;
+    const h = holdings.find((x) => x.rowId === rowId); if (!h) return;
+    setEditingId(rowId); setTab('manual'); setManualError('');
+    setSymbol(h.ticker); setExchange(h.exchange); setInstrumentType(h.instrumentType); setQuantity(h.quantity); setPrice(h.purchasePrice ?? '');
+  };
+  const cancelEdit = () => { setEditingId(undefined); setSymbol(''); setQuantity(''); setPrice(''); setManualError(''); };
   const removeHolding = (rowId: string) => {
+    if (inspect.isPending) return;
+    if (rowId === editingId) cancelEdit();
     setHoldings((items) => items.filter((h) => h.rowId !== rowId));
     if (rowId === sampleRowId) setSampleRowId(undefined);
     invalidate();
   };
-  const clearAll = () => { setHoldings([]); setSampleRowId(undefined); invalidate(); inspect.reset(); validate.reset(); };
+  const clearAll = () => { if (inspect.isPending) return; cancelEdit(); setHoldings([]); setSampleRowId(undefined); invalidate(); inspect.reset(); validate.reset(); };
 
   // CSV
   const csvHeaders = csvPreview?.columns ?? [];
@@ -229,12 +264,37 @@ export default function PortfolioPage() {
   const confirmInspect = () => {
     if (!holdings.length || inspect.isPending) return;
     const revision = inputRevision.current;
+    levelReq.current += 1;
+    setResilience(undefined); setMilestones(undefined); setLevelError('');
     setReport(undefined); setReportError('');
     inspect.mutate({ data: { holdings: apiHoldings } }, {
       onSuccess: (r) => { if (revision !== inputRevision.current) return; setReport(r); setShowConfirm(false); },
       onError: (e) => { if (revision !== inputRevision.current) return; setReportError(errorMessage(e)); setShowConfirm(false); },
     });
   };
+
+  const valuation = report?.valuation;
+  const valuedFor = (ticker: string, ex: string) => valuation?.holdings.find((v) => v.ticker === ticker && v.exchange === ex);
+  const levels = sessionResilience?.levels;
+  const levelText = levels?.status === 'available' && levels.level !== null ? `Investor Lvl ${levels.level}` : 'Investor Lvl —';
+  const doneList: Milestone[] = [];
+  if (report && report.instruments.some((i) => i.status === 'success')) doneList.push('inspect');
+  if (milestones && milestones.key === report?.checkedAt) milestones.done.forEach((m) => { if (!doneList.includes(m)) doneList.push(m); });
+  const doneCount = doneList.length;
+  const badgeName = doneCount === 5 ? 'All five modules' : doneList.includes('rehearsal') ? 'Rehearsal completed' : doneList.includes('risk') ? 'Risk analysis completed' : doneList.includes('inspect') ? 'Portfolio inspected' : '';
+  const calcLevel = () => {
+    if (!report || !holdings.length || levelRun.isPending) return;
+    const key = report.checkedAt; const id = ++levelReq.current;
+    setLevelError('');
+    levelRun.mutate({ data: { holdings: apiHoldings } }, {
+      onSuccess: (r) => { if (id === levelReq.current) publishResilience(key)(r); },
+      onError: (e) => { if (id === levelReq.current) setLevelError(errorMessage(e)); },
+    });
+  };
+  const reportShown = station === 'report' && !!sessionResilience;
+  const reportKey = report?.checkedAt;
+  const markRef = useRef(mark); markRef.current = mark;
+  useEffect(() => { if (reportShown) markRef.current(reportKey)('report'); }, [reportShown, reportKey]);
 
   // Price history rows: inspected report, else session holdings awaiting inspection
   type Row = { key: string; name: string; sub: string; source: string; range: string; status: string; tone: string; inst?: InstrumentMarketReport };
@@ -251,10 +311,22 @@ export default function PortfolioPage() {
 
   const exportRows = () => {
     const esc = (v: string) => `"${v.replace(/"/g, '""')}"`;
-    const lines = [['Asset', 'Symbol', 'Data source', 'Available date range', 'Data status', 'Observations', 'Missing adjusted closes'].map(esc).join(',')];
-    rows.forEach((r) => lines.push([r.name, r.sub, r.source, r.range, r.status, r.inst ? String(r.inst.observationCount) : '', r.inst ? String(r.inst.missingAdjustedCloseCount) : ''].map(esc).join(',')));
+    const lines = [['Asset', 'Symbol', 'Data source', 'Available date range', 'Data status', 'Observations', 'Missing adjusted closes', 'Quantity', 'Raw close (INR)', 'Value (INR)', 'Weight %', 'Price date', 'Valuation note'].map(esc).join(',')];
+    rows.forEach((r) => { const v = r.inst ? valuedFor(r.inst.ticker, r.inst.exchange) : undefined;
+      lines.push([r.name, r.sub, r.source, r.range, r.status, r.inst ? String(r.inst.observationCount) : '', r.inst ? String(r.inst.missingAdjustedCloseCount) : '', v ? String(v.quantity) : '', v?.priceInr != null ? String(v.priceInr) : '', v?.valueInr != null ? String(v.valueInr) : '', v?.weightPct != null ? String(v.weightPct) : '', v?.asOfDate ?? '', v?.reason ?? ''].map(esc).join(',')); });
+    if (report) {
+      lines.push('');
+      lines.push(['Portfolio valuation status', valuation?.status ?? 'not returned'].map(esc).join(','));
+      lines.push(['Total value (INR)', valuation?.totalValueInr != null ? String(valuation.totalValueInr) : 'unavailable'].map(esc).join(','));
+      lines.push(['Common raw close date', valuation?.asOfDate ?? ''].map(esc).join(','));
+      if (valuation?.reason) lines.push(['Reason', valuation.reason].map(esc).join(','));
+      valuation?.allocations.forEach((a) => lines.push([`Allocation ${a.instrumentType}`, String(a.valueInr), `${a.weightPct}%`].map(esc).join(',')));
+      [...(valuation?.notes ?? []), ...report.dataNotes].forEach((n) => lines.push(['Note', n].map(esc).join(',')));
+      lines.push(['Source', `${report.source} (prototype, may be incomplete)`].map(esc).join(','));
+      lines.push(['Checked at', report.checkedAt].map(esc).join(','));
+    }
     const url = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv' }));
-    const a = document.createElement('a'); a.href = url; a.download = 'price-history-inspection.csv'; a.click();
+    const a = document.createElement('a'); a.href = url; a.download = 'portfolio-data-report.csv'; a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
@@ -273,17 +345,17 @@ export default function PortfolioPage() {
     <div className="pf-body">
       <header className="pf-top">
         <span className="pf-sys" data-testid="text-sys-status">{sysLabel}</span>
-        <div className="pf-user"><div><b>Investor Lvl —</b><small>— XP</small></div><span><User size={18} /></span></div>
+        <div className="pf-user"><div><b data-testid="text-top-level">{levelText}</b><small>{doneCount} / 5 MODULES · SESSION</small></div><span><User size={18} /></span></div>
       </header>
 
       <main className="pf-main" hidden={station !== 'crash'}>
-        <CrashAnalytics key={report?.checkedAt ?? 'none'} holdings={apiHoldings} inspectionKey={report?.checkedAt} onReturn={() => go('portfolio')} />
+        <CrashAnalytics key={report?.checkedAt ?? 'none'} holdings={apiHoldings} inspectionKey={report?.checkedAt} onReturn={() => go('portfolio')} onCompleted={() => mark(report?.checkedAt)('crash')} />
       </main>
       <main className="pf-main" hidden={station !== 'risklab'}>
-        <RiskLab key={report?.checkedAt ?? 'none'} holdings={apiHoldings} inspectionKey={report?.checkedAt} />
+        <RiskLab key={report?.checkedAt ?? 'none'} holdings={apiHoldings} inspectionKey={report?.checkedAt} onCompleted={() => mark(report?.checkedAt)('risk')} />
       </main>
       <main className="pf-main" hidden={station !== 'simulator'}>
-        <Simulator key={report?.checkedAt ?? 'none'} holdings={apiHoldings} inspectionKey={report?.checkedAt} onResult={publishResilience(report?.checkedAt)} />
+        <Simulator key={report?.checkedAt ?? 'none'} holdings={apiHoldings} inspectionKey={report?.checkedAt} onResult={(r) => { publishResilience(report?.checkedAt)(r); if (r?.panicGame.status === 'revealed') mark(report?.checkedAt)('rehearsal'); }} />
       </main>
       <main className="pf-main pf-report-main" hidden={station !== 'report'}>
         <ReportPage key={report?.checkedAt ?? 'none'} holdings={apiHoldings} inspectionKey={report?.checkedAt} result={sessionResilience} onResult={publishResilience(report?.checkedAt)} onReturn={() => go('portfolio')} />
@@ -293,15 +365,23 @@ export default function PortfolioPage() {
       </div></main> : <main className="pf-main">
         <div className="pf-tiles">
           <div className="pf-card pf-tile pf-glow">
-            <div><div className="pf-label pri">Total Portfolio Value</div><div className="pf-h-lg" data-testid="text-total-value">—</div></div>
-            <div className="pf-note sec"><TrendingUp size={16} /> Not calculated by the analysis service</div>
+            <div><div className="pf-label pri">Total Portfolio Value</div><div className="pf-h-lg" data-testid="text-total-value">{valuation?.status === 'complete' ? inrFmt(valuation.totalValueInr) : '—'}</div></div>
+            <div className="pf-note sec"><TrendingUp size={16} /> {!report ? 'Confirm & Inspect to value holdings' : !valuation ? 'Valuation not returned by the analysis service' : valuation.status === 'complete' ? `Raw close, ${valuation.asOfDate ?? '—'} · ${report.source} prototype` : `Unavailable: ${valuation.reason ?? 'no common close date'}`}</div>
           </div>
           <div className="pf-card pf-tile">
-            <div><div className="pf-label pri">Learning Progress</div><div className="pf-h-lg">— / 5 Modules</div></div>
-            <div className="pf-bar"><i style={{ width: 0 }} /></div>
+            <div><div className="pf-label pri">Learning Progress</div><div className="pf-h-lg" data-testid="text-modules">{doneCount} / 5 Modules</div></div>
+            <div className="pf-bar"><i style={{ width: `${doneCount * 20}%` }} /></div>
+            <details className="pf-checklist"><summary>Session checklist</summary><ul>{milestoneList.map((m) => <li key={m.id} className={doneList.includes(m.id) ? 'is-done' : ''}>{doneList.includes(m.id) ? 'Done' : 'Open'}: {m.label}</li>)}</ul><p>Counted only from real results. Resets when holdings change or on a new inspection; refreshing the page resets the session.</p></details>
           </div>
           <div className="pf-card pf-tile pf-tile-row">
-            <div><div className="pf-label sec">Investor Rank &amp; Badge</div><div className="pf-h-sm">Investor Lvl —</div><span className="pf-chip">Not tracked</span></div>
+            <div><div className="pf-label sec">Investor Rank &amp; Badge</div><div className="pf-h-sm" data-testid="text-level">{levelText}{levels?.status === 'available' ? ` · ${levels.label}` : ''}</div>
+              <span className="pf-chip" data-testid="text-badge">{badgeName || 'No badge yet'}</span>
+              <div className="pf-level-act">
+                {levels ? (levels.status === 'available' ? <small>Score {levels.scorePct ?? '—'}% · ratio {levels.ratioToPar ?? '—'}</small> : <small>Unavailable: {levels.reason}</small>)
+                  : <button type="button" className="pf-link" onClick={calcLevel} disabled={!report || !holdings.length || levelRun.isPending} data-testid="button-calc-level">{levelRun.isPending ? 'Calculating…' : report ? 'Calculate Level' : 'Inspect first to calculate'}</button>}
+                {levelError && <small className="pf-err-inline">{levelError} <button type="button" className="pf-link" onClick={calcLevel}>Retry</button></small>}
+                <details className="pf-checklist"><summary>How level and badges work</summary><p>Level compares your simulated tail loss (CVaR) with a benchmark of the same holdings: long-only, fully invested, no leverage, equal component CVaR. Analytical comparison only, not an allocation recommendation.</p><p>Badges are session-only: Portfolio inspected, Risk analysis completed, Rehearsal completed, All five modules. They unlock only from real results and reset with holdings edits.</p></details>
+              </div></div>
             <span className="pf-badge-ic"><BadgeCheck size={36} /></span>
           </div>
         </div>
@@ -320,16 +400,18 @@ export default function PortfolioPage() {
                 <div className="pf-fields">
                   <label><span>Stock / ETF Symbol</span><input value={symbol} onChange={(e) => setSymbol(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') addManual(); }} placeholder="e.g. RELIANCE.NS" data-testid="input-ticker" /></label>
                   <label><span>Quantity</span><input type="number" min="0" step="any" value={quantity} onChange={(e) => setQuantity(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') addManual(); }} placeholder="0" data-testid="input-quantity" /></label>
-                  <label><span>Purchase Price (₹)</span><input type="number" min="0" step="any" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0.00" data-testid="input-purchase-price" /></label>
+                  <label><span>Purchase Price (₹, optional, reference only)</span><input type="number" min="0" step="any" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0.00" data-testid="input-purchase-price" /></label>
                 </div>
                 <div className="pf-manual-foot">
                   <div className="pf-mini-selects">
                     <select aria-label="Exchange" value={exchange} onChange={(e) => setExchange(e.target.value as Exchange)} data-testid="select-exchange"><option value="NSE">NSE</option><option value="BSE">BSE</option></select>
                     <select aria-label="Instrument type" value={instrumentType} onChange={(e) => setInstrumentType(e.target.value as InstrumentType)} data-testid="select-instrument-type"><option value="stock">Stock</option><option value="etf">ETF</option></select>
                   </div>
-                  <button type="button" className="pf-btn-accent" onClick={addManual} disabled={inspect.isPending} data-testid="button-add-holding"><Plus size={18} /> Add Asset</button>
+                  <div className="pf-mini-selects">{editingId && <button type="button" className="pf-btn-quiet" onClick={cancelEdit} data-testid="button-cancel-edit">Cancel</button>}
+                  <button type="button" className="pf-btn-accent" onClick={addManual} disabled={inspect.isPending} data-testid="button-add-holding">{editingId ? <><Pencil size={18} /> Save Changes</> : <><Plus size={18} /> Add Asset</>}</button></div>
                 </div>
                 {manualError && <p className="pf-err" role="alert">{manualError}</p>}
+                {editingId && <p className="pf-hint">Editing a holding. Saving clears inspection, values, level and progress until you confirm again. Purchase price is not used by the engine.</p>}
               </div>}
 
               {tab === 'csv' && <div>
@@ -362,13 +444,13 @@ export default function PortfolioPage() {
               <div className="pf-sum-grid">
                 <div className="pf-inner">
                   <div className="pf-label mute">TOTAL VALUATION</div>
-                  <div className="pf-h-lg pri">—</div>
-                  <div className="pf-body-sm sec">Not provided by the analysis service</div>
+                  <div className="pf-h-lg pri" data-testid="text-summary-total">{valuation?.status === 'complete' ? inrFmt(valuation.totalValueInr) : '—'}</div>
+                  <div className="pf-body-sm sec">{!report ? 'Confirm & Inspect to value holdings.' : !valuation ? 'Valuation not returned.' : valuation.status === 'complete' ? `Quantity × raw close on ${valuation.asOfDate ?? '—'} (latest common date). No proxies or fills. ${report.source} prototype.` : `Unavailable: ${valuation.reason ?? 'no common close date'}. No partial total shown.`}</div>
                 </div>
                 <div className="pf-inner pf-alloc">
                   <div className="pf-label mute">ASSET ALLOCATION</div>
-                  <div className="pf-alloc-bar"><i /></div>
-                  <div className="pf-label mute">No weights returned</div>
+                  <div className="pf-alloc-bar pf-alloc-split">{valuation?.allocations.map((a) => <i key={a.instrumentType} className={a.instrumentType} style={{ width: `${a.weightPct}%` }} />)}</div>
+                  <div className="pf-label mute">{valuation?.allocations.length ? valuation.allocations.map((a) => `${a.instrumentType.toUpperCase()} ${pctFmt(a.weightPct)} (${inrFmt(a.valueInr)})`).join(' · ') : 'No weights returned'}</div>
                 </div>
               </div>
               <div className="pf-sum-foot">
@@ -378,6 +460,7 @@ export default function PortfolioPage() {
                 </button>
               </div>
               {!holdings.length && <p className="pf-hint">Add at least one holding to inspect price history.</p>}
+              {valuation?.notes.map((n) => <p key={n} className="pf-hint">{n}</p>)}
               {validationError && <p className="pf-err" role="alert">{validationError}</p>}
               {issues.length > 0 && <div className="pf-err" role="alert">{issues.map((i, n) => <p key={`${i.row}-${n}`}>Row {i.row}: {i.message}</p>)}</div>}
               {reportError && <p className="pf-err" role="alert">Inspection could not be completed. {reportError} <button type="button" className="pf-link" onClick={beginReview} data-testid="button-retry-inspection">Try again</button></p>}
@@ -391,22 +474,23 @@ export default function PortfolioPage() {
                 <div><div className="pf-kicker">ASSET ALLOCATION MAP</div><h3 className="pf-h-md">Portfolio view</h3></div>
                 <Radar size={22} className="pri pf-spin-slow" />
               </div>
-              <p className="pf-body-sm mute">{holdings.length ? `${holdings.length} / 50 holdings in session. Weights not calculated.` : 'No holdings in this session yet.'}</p>
+              <p className="pf-body-sm mute">{holdings.length ? `${holdings.length} / 50 holdings in session. ${valuation?.status === 'complete' ? `Weights from raw close ${valuation.asOfDate}.` : 'Weights appear after a complete valuation.'} Use the pencil to edit.` : 'No holdings in this session yet.'}</p>
             </div>
             <div className="pf-orbit">
               <i className="r1" /><i className="r2" /><i className="r3" />
               <div className={`pf-core ${holdings.length ? '' : 'is-empty'}`}>CORE</div>
               {holdings.slice(0, 4).map((h, n) => <div key={h.rowId} className={`pf-node ${nodeSlots[n]}`} data-testid={`node-holding-${n}`}>
                 <div className="pf-label">{h.ticker}{h.rowId === sampleRowId ? ' · SAMPLE' : ''}</div>
-                <div className="pf-node-v">QTY {h.quantity}</div>
-                <button type="button" onClick={() => removeHolding(h.rowId)} aria-label={`Remove ${h.ticker}`} data-testid={`button-remove-${n}`}><X size={12} /></button>
+                <div className="pf-node-v">QTY {h.quantity}{(() => { const v = valuedFor(h.ticker, h.exchange); return v?.weightPct != null ? ` · ${pctFmt(v.weightPct)}` : ''; })()}</div>
+                <button type="button" className="pf-node-ed" onClick={() => startEdit(h.rowId)} disabled={inspect.isPending} aria-label={`Edit ${h.ticker}`} data-testid={`button-edit-${n}`}><Pencil size={11} /></button>
+                <button type="button" disabled={inspect.isPending} onClick={() => removeHolding(h.rowId)} aria-label={`Remove ${h.ticker}`} data-testid={`button-remove-${n}`}><X size={12} /></button>
               </div>)}
             </div>
             {holdings.length > 4 && <div className="pf-more">
-              {holdings.slice(4).map((h, n) => <span key={h.rowId}>{h.ticker} <small>{h.quantity}</small><button type="button" onClick={() => removeHolding(h.rowId)} aria-label={`Remove ${h.ticker}`} data-testid={`button-remove-${n + 4}`}><X size={11} /></button></span>)}
+              {holdings.slice(4).map((h, n) => <span key={h.rowId}>{h.ticker} <small>{h.quantity}</small><button type="button" onClick={() => startEdit(h.rowId)} disabled={inspect.isPending} aria-label={`Edit ${h.ticker}`} data-testid={`button-edit-${n + 4}`}><Pencil size={11} /></button><button type="button" disabled={inspect.isPending} onClick={() => removeHolding(h.rowId)} aria-label={`Remove ${h.ticker}`} data-testid={`button-remove-${n + 4}`}><X size={11} /></button></span>)}
             </div>}
             {sampleLoaded && <p className="pf-body-sm pri pf-sample-note" data-testid="text-sample-banner">Sample input: one VEDL share, not your holding and not a suggestion.</p>}
-            <div className="pf-map-foot"><span>VOLATILITY: —</span>{holdings.length > 0 && <button type="button" className="pf-link" onClick={clearAll} data-testid="button-clear-all">CLEAR ALL</button>}<span className="sec">FEED: YAHOO PROTOTYPE</span></div>
+            <div className="pf-map-foot"><span>VALUE: {valuation?.status === 'complete' ? inrFmt(valuation.totalValueInr) : '—'}</span>{holdings.length > 0 && <button type="button" className="pf-link" onClick={clearAll} data-testid="button-clear-all">CLEAR ALL</button>}<span className="sec">FEED: YAHOO PROTOTYPE</span></div>
           </section>
         </div>
 
@@ -415,7 +499,7 @@ export default function PortfolioPage() {
             <div><div className="pf-kicker">HISTORICAL PRICE DATA</div><h3 className="pf-h-md">Price history</h3></div>
             <div className="pf-ph-tools">
               <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter assets..." aria-label="Filter assets" data-testid="input-filter-assets" />
-              <button type="button" className="pf-btn-quiet" onClick={exportRows} disabled={!rows.length} data-testid="button-export-history">Export Price history</button>
+              <button type="button" className="pf-btn-quiet" onClick={exportRows} disabled={!rows.length} data-testid="button-export-history">Export Data Report</button>
             </div>
           </div>
           <div className="pf-table-wrap">
@@ -424,7 +508,7 @@ export default function PortfolioPage() {
               <tbody>
                 {inspect.isPending && <tr><td colSpan={5} className="mute">Inspecting price history…</td></tr>}
                 {!inspect.isPending && shown.length === 0 && <tr><td colSpan={5} className="mute">{rows.length ? 'No assets match this filter.' : 'Add holdings and confirm to inspect price history.'}</td></tr>}
-                {!inspect.isPending && shown.map((r) => <RowView key={r.key} r={r} open={openRow === r.key} toggle={() => setOpenRow(openRow === r.key ? undefined : r.key)} />)}
+                {!inspect.isPending && shown.map((r) => <RowView key={r.key} r={r} open={openRow === r.key} toggle={() => setOpenRow(openRow === r.key ? undefined : r.key)} v={r.inst ? valuedFor(r.inst.ticker, r.inst.exchange) : undefined} />)}
               </tbody>
             </table>
           </div>
@@ -463,7 +547,7 @@ export default function PortfolioPage() {
   </div>;
 }
 
-function RowView({ r, open, toggle }: { r: { name: string; sub: string; source: string; range: string; status: string; tone: string; inst?: InstrumentMarketReport }; open: boolean; toggle: () => void }) {
+function RowView({ r, open, toggle, v }: { r: { name: string; sub: string; source: string; range: string; status: string; tone: string; inst?: InstrumentMarketReport }; open: boolean; toggle: () => void; v?: ValuedHolding }) {
   const i = r.inst;
   return <>
     <tr data-testid={`row-history-${r.name}`}>
@@ -475,6 +559,8 @@ function RowView({ r, open, toggle }: { r: { name: string; sub: string; source: 
     </tr>
     {open && i && <tr className="pf-detail"><td colSpan={5}>
       <dl>
+        <div><dt>Raw close / date</dt><dd>{v?.priceInr != null ? `${inrFmt(v.priceInr)} (${v.asOfDate ?? '—'})` : '—'}</dd></div>
+        <div><dt>Value / weight</dt><dd>{v?.valueInr != null ? `${inrFmt(v.valueInr)}${v.weightPct != null ? ` · ${v.weightPct}%` : ''}` : '—'}</dd></div>
         <div><dt>Observations</dt><dd>{i.observationCount}</dd></div>
         <div><dt>Adjusted closes</dt><dd>{i.adjustedCloseCount}</dd></div>
         <div><dt>Missing adj. closes</dt><dd>{i.missingAdjustedCloseCount}</dd></div>
@@ -484,6 +570,7 @@ function RowView({ r, open, toggle }: { r: { name: string; sub: string; source: 
         <div><dt>Splits</dt><dd>{i.splits.length}</dd></div>
         {i.proxyInstrument && <div><dt>Proxy window</dt><dd>{i.proxyStartDate ?? '—'} – {i.proxyEndDate ?? '—'}</dd></div>}
       </dl>
+      {v?.reason && <p className="pf-body-sm mute">Valuation: {v.reason}</p>}
       {i.skipReason && <p className="pf-err">{i.skipReason}</p>}
       {i.adjustmentConcerns.map((c) => <p key={c} className="pf-body-sm mute">{c}</p>)}
     </td></tr>}

@@ -476,6 +476,7 @@ def inspect_portfolio(
 
     fetcher = history_fetcher or fetch_history
     results: list[dict[str, Any] | None] = [None] * len(validation["holdings"])
+    histories: list[Any] = [None] * len(validation["holdings"])
     with ThreadPoolExecutor(max_workers=4) as executor:
         futures = {
             executor.submit(fetcher, holding["yahooSymbol"]): (index, holding)
@@ -485,6 +486,7 @@ def inspect_portfolio(
             index, holding = futures[future]
             try:
                 history = future.result()
+                histories[index] = history
                 results[index] = _history_report(holding, history)
             except Exception as exc:  # Provider failures are reported per ticker.
                 result = _history_report(holding, None)
@@ -498,6 +500,7 @@ def inspect_portfolio(
 
     instruments = [result for result in results if result is not None]
     succeeded = sum(1 for result in instruments if result["status"] == "success")
+    from portfolio_valuation import value_portfolio
     return {
         "source": SOURCE,
         "checkedAt": datetime.now(timezone.utc).isoformat(),
@@ -507,6 +510,7 @@ def inspect_portfolio(
             "skipped": len(instruments) - succeeded,
         },
         "instruments": instruments,
+        "valuation": value_portfolio(validation["holdings"], histories),
         "dataNotes": [
             SOURCE_NOTE,
             "As-of is the latest date returned by Yahoo; a current-day row may be provisional and is not a verified final exchange close.",

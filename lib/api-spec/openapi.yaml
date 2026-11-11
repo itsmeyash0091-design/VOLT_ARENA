@@ -558,7 +558,46 @@ components:
           type: array
           items:
             type: string
+        valuation:
+          $ref: "#/components/schemas/PortfolioValuation"
       required: [source, checkedAt, summary, instruments, dataNotes]
+    ValuedHolding:
+      type: object
+      required: [ticker, exchange, instrumentType, quantity, priceInr, asOfDate, valueInr, weightPct, reason]
+      properties:
+        ticker: { type: string }
+        exchange: { $ref: "#/components/schemas/Exchange" }
+        instrumentType: { $ref: "#/components/schemas/InstrumentType" }
+        quantity: { type: number }
+        priceInr: { type: ["number", "null"] }
+        asOfDate: { type: ["string", "null"] }
+        valueInr: { type: ["number", "null"] }
+        weightPct: { type: ["number", "null"] }
+        reason: { type: ["string", "null"] }
+    ValuationAllocation:
+      type: object
+      required: [instrumentType, valueInr, weightPct]
+      properties:
+        instrumentType: { $ref: "#/components/schemas/InstrumentType" }
+        valueInr: { type: number }
+        weightPct: { type: number }
+    PortfolioValuation:
+      type: object
+      required: [status, asOfDate, totalValueInr, holdings, allocations, reason, notes]
+      properties:
+        status: { type: string, enum: [complete, unavailable] }
+        asOfDate: { type: ["string", "null"] }
+        totalValueInr: { type: ["number", "null"] }
+        holdings:
+          type: array
+          items: { $ref: "#/components/schemas/ValuedHolding" }
+        allocations:
+          type: array
+          items: { $ref: "#/components/schemas/ValuationAllocation" }
+        reason: { type: ["string", "null"] }
+        notes:
+          type: array
+          items: { type: string }
     RiskInstrumentCoverage:
       type: object
       properties:
