@@ -445,3 +445,169 @@ export const RunPortfolioStressResponse = zod.object({
 })
 
 
+/**
+ * @summary Get Python-owned scoring rules and benchmark assumptions
+ */
+export const GetGameSettingsResponse = zod.object({
+  "scoringVersion": zod.string(),
+  "hiddenScenarioCount": zod.literal(500),
+  "hiddenSeed": zod.number().int(),
+  "confidencePct": zod.number(),
+  "horizonTradingDays": zod.number().int(),
+  "confidenceBoundsPct": zod.object({
+  "min": zod.number(),
+  "max": zod.number()
+}),
+  "horizonBoundsDays": zod.object({
+  "min": zod.number(),
+  "max": zod.number()
+}),
+  "componentShareTolerance": zod.number(),
+  "benchmarkMethod": zod.string(),
+  "levels": zod.array(zod.object({
+  "maxRatio": zod.number().nullable(),
+  "level": zod.number().int(),
+  "label": zod.string()
+})),
+  "reflections": zod.array(zod.object({
+  "id": zod.enum(['pause', 'coverage', 'assumptions']),
+  "label": zod.string(),
+  "feedback": zod.string()
+})),
+  "assumptions": zod.array(zod.string())
+})
+
+
+/**
+ * @summary Run 500 hidden scenarios, certified CVaR par Levels, panic rehearsal, and Crash Card
+ */
+export const analyzePortfolioResilienceBodyHoldingsItemTickerMax = 20;
+
+
+export const analyzePortfolioResilienceBodyHoldingsItemTickerRegExp = new RegExp('^[A-Za-z0-9][A-Za-z0-9.&_-]*$');
+export const analyzePortfolioResilienceBodyHoldingsItemQuantityMax = 32;
+
+export const analyzePortfolioResilienceBodyHoldingsMax = 50;
+
+
+
+export const AnalyzePortfolioResilienceBody = zod.object({
+  "holdings": zod.array(zod.object({
+  "ticker": zod.string().min(1).max(analyzePortfolioResilienceBodyHoldingsItemTickerMax).regex(analyzePortfolioResilienceBodyHoldingsItemTickerRegExp),
+  "exchange": zod.enum(['NSE', 'BSE']),
+  "instrumentType": zod.enum(['stock', 'etf']),
+  "quantity": zod.string().min(1).max(analyzePortfolioResilienceBodyHoldingsItemQuantityMax)
+})).min(1).max(analyzePortfolioResilienceBodyHoldingsMax),
+  "confidencePct": zod.string().optional(),
+  "horizonTradingDays": zod.string().optional(),
+  "lossLimitInr": zod.string().optional(),
+  "reflection": zod.enum(['pause', 'coverage', 'assumptions']).optional()
+})
+
+export const analyzePortfolioResilienceResponseInstrumentsItemObservationCountMin = 0;
+
+export const analyzePortfolioResilienceResponseInstrumentsItemMissingAlignedObservationsMin = 0;
+
+export const analyzePortfolioResilienceResponseCrashCardFindingsMax = 3;
+
+export const analyzePortfolioResilienceResponseCrashCardWordCountMax = 119;
+
+
+
+export const AnalyzePortfolioResilienceResponse = zod.object({
+  "source": zod.string(),
+  "checkedAt": zod.string(),
+  "valuationDate": zod.string().nullable(),
+  "portfolioValueInr": zod.number().nullable(),
+  "settings": zod.object({
+  "scoringVersion": zod.string(),
+  "hiddenScenarioCount": zod.literal(500),
+  "hiddenSeed": zod.number().int(),
+  "confidencePct": zod.number(),
+  "horizonTradingDays": zod.number().int(),
+  "confidenceBoundsPct": zod.object({
+  "min": zod.number(),
+  "max": zod.number()
+}),
+  "horizonBoundsDays": zod.object({
+  "min": zod.number(),
+  "max": zod.number()
+}),
+  "componentShareTolerance": zod.number(),
+  "benchmarkMethod": zod.string(),
+  "levels": zod.array(zod.object({
+  "maxRatio": zod.number().nullable(),
+  "level": zod.number().int(),
+  "label": zod.string()
+})),
+  "reflections": zod.array(zod.object({
+  "id": zod.enum(['pause', 'coverage', 'assumptions']),
+  "label": zod.string(),
+  "feedback": zod.string()
+})),
+  "assumptions": zod.array(zod.string())
+}),
+  "evaluatedScenarioCount": zod.number().int(),
+  "hiddenScenarioDigest": zod.string().nullable(),
+  "historyKind": zod.enum(['observed', 'proxy', 'mixed', 'insufficient']),
+  "coverageStatus": zod.enum(['complete', 'incomplete', 'unavailable']),
+  "coverageStart": zod.string().nullable(),
+  "coverageEnd": zod.string().nullable(),
+  "validReturnCount": zod.number().int(),
+  "excludedIntervalCount": zod.number().int(),
+  "instruments": zod.array(zod.object({
+  "ticker": zod.string(),
+  "instrumentType": zod.enum(['stock', 'etf']),
+  "dataType": zod.enum(['observed', 'proxy', 'insufficient']),
+  "sourceSymbol": zod.string().nullable(),
+  "proxyInstrument": zod.string().nullable(),
+  "coverageStart": zod.coerce.date().nullable(),
+  "coverageEnd": zod.coerce.date().nullable(),
+  "observationCount": zod.number().int().min(analyzePortfolioResilienceResponseInstrumentsItemObservationCountMin),
+  "missingAlignedObservations": zod.number().int().min(analyzePortfolioResilienceResponseInstrumentsItemMissingAlignedObservationsMin),
+  "note": zod.string()
+})),
+  "levels": zod.object({
+  "status": zod.enum(['available', 'unavailable']),
+  "reason": zod.string(),
+  "level": zod.number().int().nullable(),
+  "label": zod.string(),
+  "scorePct": zod.number().nullable(),
+  "currentCvarPct": zod.number().nullable(),
+  "currentCvarInr": zod.number().nullable(),
+  "parCvarPct": zod.number().nullable(),
+  "parCvarInr": zod.number().nullable(),
+  "ratioToPar": zod.number().nullable(),
+  "maxComponentShareErrorPct": zod.number().nullable(),
+  "holdings": zod.array(zod.object({
+  "ticker": zod.string(),
+  "exchange": zod.string(),
+  "currentWeightPct": zod.number(),
+  "parWeightPct": zod.number(),
+  "parComponentCvarInr": zod.number(),
+  "parComponentSharePct": zod.number()
+}))
+}),
+  "panicGame": zod.object({
+  "status": zod.enum(['ready', 'revealed', 'unavailable']),
+  "lossLimitInr": zod.number().nullable(),
+  "evaluatedScenarioCount": zod.number().int(),
+  "withinLimitCount": zod.number().int().nullable(),
+  "coverageScorePct": zod.number().nullable(),
+  "revealedOutcome": zod.string().nullable(),
+  "reflection": zod.union([zod.literal('pause'),zod.literal('coverage'),zod.literal('assumptions'),zod.literal(null)]).nullable(),
+  "reflectionFeedback": zod.string().nullable(),
+  "message": zod.string()
+}),
+  "crashCard": zod.object({
+  "templateVersion": zod.string(),
+  "header": zod.string(),
+  "findings": zod.array(zod.string()).max(analyzePortfolioResilienceResponseCrashCardFindingsMax),
+  "footer": zod.string(),
+  "text": zod.string(),
+  "wordCount": zod.number().int().max(analyzePortfolioResilienceResponseCrashCardWordCountMax)
+}),
+  "notes": zod.array(zod.string())
+})
+
+

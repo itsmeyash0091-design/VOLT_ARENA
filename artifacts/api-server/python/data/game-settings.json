@@ -1,0 +1,21 @@
+{
+  "scoringVersion": "cvar-par-v1",
+  "hiddenScenarioCount": 500,
+  "hiddenSeed": 20261112,
+  "confidencePct": 95,
+  "horizonTradingDays": 1,
+  "confidenceBoundsPct": {"min": 50, "max": 99},
+  "horizonBoundsDays": {"min": 1, "max": 252},
+  "componentShareTolerance": 0.0001,
+  "levels": [
+    {"maxRatio": 1, "level": 4, "label": "At or below par"},
+    {"maxRatio": 1.25, "level": 3, "label": "Up to 1.25 times par"},
+    {"maxRatio": 1.75, "level": 2, "label": "Up to 1.75 times par"},
+    {"maxRatio": null, "level": 1, "label": "Above 1.75 times par"}
+  ],
+  "reflections": [
+    {"id": "pause", "label": "Pause before reacting", "feedback": "Pause recorded for this rehearsal. No holdings or analytical settings were changed."},
+    {"id": "coverage", "label": "Check the source coverage", "feedback": "The coverage notes below describe missing intervals, proxies, and source limitations. No holdings were changed."},
+    {"id": "assumptions", "label": "Review the assumptions", "feedback": "The comparison uses only the submitted holdings and fixed sampled outcomes. It is not a portfolio recommendation."}
+  ]
+}

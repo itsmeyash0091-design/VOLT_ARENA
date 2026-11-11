@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { RiskAnalysis } from '@/components/risk-analysis';
 import { StressLab } from '@/components/stress-lab';
+import { ResilienceLab } from '@/components/resilience-lab';
 import {
   useGetMarketDataUniverse,
   usePreviewPortfolioCsv,
@@ -323,7 +324,12 @@ function App() {
       holdings={holdings.map(({ rowId: _rowId, ...holding }) => ({ ...holding, quantity: String(holding.quantity) }))}
     />}
 
-    <footer className="footer"><div className="footer-mark"><AppMark /><span>VoltArena</span></div><p>Stage 01 / Intake · Stage 02 / Replay &amp; risk · Stage 03 / Stress &amp; simulation</p><span className="footer-session"><ShieldCheck size={13} /> Session-only workspace</span></footer>
+    {inspectReport && <ResilienceLab
+      key={`resilience-${inspectReport.checkedAt}`}
+      holdings={holdings.map(({ rowId: _rowId, ...holding }) => ({ ...holding, quantity: String(holding.quantity) }))}
+    />}
+
+    <footer className="footer"><div className="footer-mark"><AppMark /><span>VoltArena</span></div><p>Stage 01 / Intake · Stage 02 / Replay &amp; risk · Stage 03 / Stress &amp; simulation · Stage 04 / Levels &amp; rehearsal</p><span className="footer-session"><ShieldCheck size={13} /> Session-only workspace</span></footer>
   </main>;
 }
 

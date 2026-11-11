@@ -118,18 +118,13 @@ def reverse_stress(holdings: list[dict[str, Any]], values: list[float], shocks: 
     return result
 
 
-def run_portfolio_stress(
-    holdings: Any, scenario_id: Any, overrides: Any = None, target: Any = "20",
+def prepare_history(
+    normalized_holdings: list[dict[str, Any]],
     history_fetcher: Callable[[str], pd.DataFrame] | None = None,
     proxy_mapping: dict | None = None,
 ) -> dict[str, Any]:
-    validated = validate_holdings(holdings)
-    if not validated["valid"]:
-        raise PortfolioInputError("Portfolio input is invalid.", validated["issues"])
-    scenario = validate(scenario_id, overrides)
-    target = target_loss(target)  # Reject invalid requests before any network access.
     config = dict(library()["simulation"])
-    loaded = _fetch_input_series(validated["holdings"], history_fetcher or fetch_history,
+    loaded = _fetch_input_series(normalized_holdings, history_fetcher or fetch_history,
                                  DOCUMENTED_SECTOR_PROXIES if proxy_mapping is None else proxy_mapping)
     selected, instruments = [], []
     for item in loaded:
@@ -164,6 +159,27 @@ def run_portfolio_stress(
         "proxy" if all(item["dataType"] == "proxy" for item in instruments) else
         "mixed" if any(item["dataType"] == "proxy" for item in instruments) else "observed"
     )
+    return {"loaded": loaded, "instruments": instruments, "valuationDate": valuation_date,
+            "values": values, "total": total, "common": common, "rows": rows,
+            "starts": starts, "excluded": excluded, "historyKind": history_kind}
+
+
+def run_portfolio_stress(
+    holdings: Any, scenario_id: Any, overrides: Any = None, target: Any = "20",
+    history_fetcher: Callable[[str], pd.DataFrame] | None = None,
+    proxy_mapping: dict | None = None,
+) -> dict[str, Any]:
+    validated = validate_holdings(holdings)
+    if not validated["valid"]:
+        raise PortfolioInputError("Portfolio input is invalid.", validated["issues"])
+    scenario = validate(scenario_id, overrides)
+    target = target_loss(target)  # Reject invalid requests before any network access.
+    config = dict(library()["simulation"])
+    prepared = prepare_history(validated["holdings"], history_fetcher, proxy_mapping)
+    loaded, instruments = prepared["loaded"], prepared["instruments"]
+    valuation_date, values, total = prepared["valuationDate"], prepared["values"], prepared["total"]
+    common, rows, starts = prepared["common"], prepared["rows"], prepared["starts"]
+    excluded, history_kind = prepared["excluded"], prepared["historyKind"]
     simulation = {
         "kind": "simulated", "status": "unavailable", "config": config,
         "coverageStart": common[0] if common else None, "coverageEnd": common[-1] if common else None,

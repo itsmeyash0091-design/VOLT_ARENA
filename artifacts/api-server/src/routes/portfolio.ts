@@ -8,6 +8,9 @@ import {
   GetStaticScenariosResponse,
   RunPortfolioStressBody,
   RunPortfolioStressResponse,
+  GetGameSettingsResponse,
+  AnalyzePortfolioResilienceBody,
+  AnalyzePortfolioResilienceResponse,
   PortfolioInputError,
   PreviewPortfolioCsvBody,
   PreviewPortfolioCsvResponse,
@@ -168,6 +171,37 @@ router.post("/portfolio/stress-analysis", async (req, res): Promise<void> => {
     }
     req.log.error({ err }, "Unable to calculate portfolio stress and simulations");
     res.status(502).json({ error: "Stress analysis could not be completed by the Python engine." });
+  }
+});
+
+router.get("/game/settings", async (req, res): Promise<void> => {
+  try {
+    const data = await runPythonEngine("get_game_settings");
+    GetGameSettingsResponse.parse(data);
+    res.json(data);
+  } catch (err) {
+    req.log.error({ err }, "Unable to load game settings");
+    res.status(502).json({ error: "The Python scoring settings are unavailable." });
+  }
+});
+
+router.post("/portfolio/resilience", async (req, res): Promise<void> => {
+  const parsed = AnalyzePortfolioResilienceBody.strict().safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json(requestBodyError("Provide valid holdings and numeric option strings."));
+    return;
+  }
+  try {
+    const data = await runPythonEngine("analyze_resilience", parsed.data);
+    AnalyzePortfolioResilienceResponse.parse(data);
+    res.json(data);
+  } catch (err) {
+    if (err instanceof PythonInputError) {
+      res.status(400).json({ error: err.message, issues: err.issues });
+      return;
+    }
+    req.log.error({ err }, "Unable to calculate Levels and panic rehearsal");
+    res.status(502).json({ error: "The Python resilience calculation could not be completed." });
   }
 });
 

@@ -532,3 +532,203 @@ export interface PortfolioStressReport {
   methodNotes: string[];
 }
 
+export type ResilienceInputReflection = typeof ResilienceInputReflection[keyof typeof ResilienceInputReflection];
+
+
+export const ResilienceInputReflection = {
+  pause: 'pause',
+  coverage: 'coverage',
+  assumptions: 'assumptions',
+} as const;
+
+export interface ResilienceInput {
+  /**
+     * @minItems 1
+     * @maxItems 50
+     */
+  holdings: PortfolioHolding[];
+  confidencePct?: string;
+  horizonTradingDays?: string;
+  lossLimitInr?: string;
+  reflection?: ResilienceInputReflection;
+}
+
+export interface LevelThreshold {
+  /** @nullable */
+  maxRatio: number | null;
+  level: number;
+  label: string;
+}
+
+export type ReflectionOptionId = typeof ReflectionOptionId[keyof typeof ReflectionOptionId];
+
+
+export const ReflectionOptionId = {
+  pause: 'pause',
+  coverage: 'coverage',
+  assumptions: 'assumptions',
+} as const;
+
+export interface ReflectionOption {
+  id: ReflectionOptionId;
+  label: string;
+  feedback: string;
+}
+
+export type GameSettingsHiddenScenarioCount = typeof GameSettingsHiddenScenarioCount[keyof typeof GameSettingsHiddenScenarioCount];
+
+
+export const GameSettingsHiddenScenarioCount = {
+  NUMBER_500: 500,
+} as const;
+
+export interface GameSettings {
+  scoringVersion: string;
+  hiddenScenarioCount: GameSettingsHiddenScenarioCount;
+  hiddenSeed: number;
+  confidencePct: number;
+  horizonTradingDays: number;
+  confidenceBoundsPct: ShockBounds;
+  horizonBoundsDays: ShockBounds;
+  componentShareTolerance: number;
+  benchmarkMethod: string;
+  levels: LevelThreshold[];
+  reflections: ReflectionOption[];
+  assumptions: string[];
+}
+
+export interface ParHolding {
+  ticker: string;
+  exchange: string;
+  currentWeightPct: number;
+  parWeightPct: number;
+  parComponentCvarInr: number;
+  parComponentSharePct: number;
+}
+
+export type PortfolioLevelsStatus = typeof PortfolioLevelsStatus[keyof typeof PortfolioLevelsStatus];
+
+
+export const PortfolioLevelsStatus = {
+  available: 'available',
+  unavailable: 'unavailable',
+} as const;
+
+export interface PortfolioLevels {
+  status: PortfolioLevelsStatus;
+  reason: string;
+  /** @nullable */
+  level: number | null;
+  label: string;
+  /** @nullable */
+  scorePct: number | null;
+  /** @nullable */
+  currentCvarPct: number | null;
+  /** @nullable */
+  currentCvarInr: number | null;
+  /** @nullable */
+  parCvarPct: number | null;
+  /** @nullable */
+  parCvarInr: number | null;
+  /** @nullable */
+  ratioToPar: number | null;
+  /** @nullable */
+  maxComponentShareErrorPct: number | null;
+  holdings: ParHolding[];
+}
+
+export type PanicGameResultStatus = typeof PanicGameResultStatus[keyof typeof PanicGameResultStatus];
+
+
+export const PanicGameResultStatus = {
+  ready: 'ready',
+  revealed: 'revealed',
+  unavailable: 'unavailable',
+} as const;
+
+/**
+ * @nullable
+ */
+export type PanicGameResultReflection = typeof PanicGameResultReflection[keyof typeof PanicGameResultReflection] | null;
+
+
+export const PanicGameResultReflection = {
+  pause: 'pause',
+  coverage: 'coverage',
+  assumptions: 'assumptions',
+} as const;
+
+export interface PanicGameResult {
+  status: PanicGameResultStatus;
+  /** @nullable */
+  lossLimitInr: number | null;
+  evaluatedScenarioCount: number;
+  /** @nullable */
+  withinLimitCount: number | null;
+  /** @nullable */
+  coverageScorePct: number | null;
+  /** @nullable */
+  revealedOutcome: string | null;
+  /** @nullable */
+  reflection: PanicGameResultReflection;
+  /** @nullable */
+  reflectionFeedback: string | null;
+  message: string;
+}
+
+export interface CrashCard {
+  templateVersion: string;
+  header: string;
+  /** @maxItems 3 */
+  findings: string[];
+  footer: string;
+  text: string;
+  /** @maximum 119 */
+  wordCount: number;
+}
+
+export type ResilienceReportHistoryKind = typeof ResilienceReportHistoryKind[keyof typeof ResilienceReportHistoryKind];
+
+
+export const ResilienceReportHistoryKind = {
+  observed: 'observed',
+  proxy: 'proxy',
+  mixed: 'mixed',
+  insufficient: 'insufficient',
+} as const;
+
+export type ResilienceReportCoverageStatus = typeof ResilienceReportCoverageStatus[keyof typeof ResilienceReportCoverageStatus];
+
+
+export const ResilienceReportCoverageStatus = {
+  complete: 'complete',
+  incomplete: 'incomplete',
+  unavailable: 'unavailable',
+} as const;
+
+export interface ResilienceReport {
+  source: string;
+  checkedAt: string;
+  /** @nullable */
+  valuationDate: string | null;
+  /** @nullable */
+  portfolioValueInr: number | null;
+  settings: GameSettings;
+  evaluatedScenarioCount: number;
+  /** @nullable */
+  hiddenScenarioDigest: string | null;
+  historyKind: ResilienceReportHistoryKind;
+  coverageStatus: ResilienceReportCoverageStatus;
+  /** @nullable */
+  coverageStart: string | null;
+  /** @nullable */
+  coverageEnd: string | null;
+  validReturnCount: number;
+  excludedIntervalCount: number;
+  instruments: RiskInstrumentCoverage[];
+  levels: PortfolioLevels;
+  panicGame: PanicGameResult;
+  crashCard: CrashCard;
+  notes: string[];
+}
+

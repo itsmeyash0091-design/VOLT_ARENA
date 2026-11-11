@@ -203,6 +203,54 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PortfolioInputError"
+  /game/settings:
+    get:
+      operationId: getGameSettings
+      tags: [portfolio]
+      summary: Get Python-owned scoring rules and benchmark assumptions
+      responses:
+        "200":
+          description: Fixed scoring settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameSettings"
+        "502":
+          description: Settings unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioInputError"
+  /portfolio/resilience:
+    post:
+      operationId: analyzePortfolioResilience
+      tags: [portfolio]
+      summary: Run 500 hidden scenarios, certified CVaR par Levels, panic rehearsal, and Crash Card
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResilienceInput"
+      responses:
+        "200":
+          description: Python-only scoring and templated outputs; no hidden outcome matrix
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResilienceReport"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioInputError"
+        "502":
+          description: Python calculation unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioInputError"
 components:
   schemas:
     HealthStatus:
@@ -888,4 +936,145 @@ components:
           type: array
           items: {type: string}
       required: [source, checkedAt, valuationDate, portfolioValueInr, scenario, reverseStress, monteCarlo, methodNotes]
+    ResilienceInput:
+      type: object
+      additionalProperties: false
+      properties:
+        holdings:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items:
+            $ref: "#/components/schemas/PortfolioHolding"
+        confidencePct: {type: string}
+        horizonTradingDays: {type: string}
+        lossLimitInr: {type: string}
+        reflection: {type: string, enum: [pause, coverage, assumptions]}
+      required: [holdings]
+    LevelThreshold:
+      type: object
+      properties:
+        maxRatio: {type: ["number", "null"]}
+        level: {type: integer}
+        label: {type: string}
+      required: [maxRatio, level, label]
+    ReflectionOption:
+      type: object
+      properties:
+        id: {type: string, enum: [pause, coverage, assumptions]}
+        label: {type: string}
+        feedback: {type: string}
+      required: [id, label, feedback]
+    GameSettings:
+      type: object
+      properties:
+        scoringVersion: {type: string}
+        hiddenScenarioCount: {type: integer, enum: [500]}
+        hiddenSeed: {type: integer}
+        confidencePct: {type: number}
+        horizonTradingDays: {type: integer}
+        confidenceBoundsPct:
+          $ref: "#/components/schemas/ShockBounds"
+        horizonBoundsDays:
+          $ref: "#/components/schemas/ShockBounds"
+        componentShareTolerance: {type: number}
+        benchmarkMethod: {type: string}
+        levels:
+          type: array
+          items:
+            $ref: "#/components/schemas/LevelThreshold"
+        reflections:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReflectionOption"
+        assumptions:
+          type: array
+          items: {type: string}
+      required: [scoringVersion, hiddenScenarioCount, hiddenSeed, confidencePct, horizonTradingDays, confidenceBoundsPct, horizonBoundsDays, componentShareTolerance, benchmarkMethod, levels, reflections, assumptions]
+    ParHolding:
+      type: object
+      properties:
+        ticker: {type: string}
+        exchange: {type: string}
+        currentWeightPct: {type: number}
+        parWeightPct: {type: number}
+        parComponentCvarInr: {type: number}
+        parComponentSharePct: {type: number}
+      required: [ticker, exchange, currentWeightPct, parWeightPct, parComponentCvarInr, parComponentSharePct]
+    PortfolioLevels:
+      type: object
+      properties:
+        status: {type: string, enum: [available, unavailable]}
+        reason: {type: string}
+        level: {type: ["integer", "null"]}
+        label: {type: string}
+        scorePct: {type: ["number", "null"]}
+        currentCvarPct: {type: ["number", "null"]}
+        currentCvarInr: {type: ["number", "null"]}
+        parCvarPct: {type: ["number", "null"]}
+        parCvarInr: {type: ["number", "null"]}
+        ratioToPar: {type: ["number", "null"]}
+        maxComponentShareErrorPct: {type: ["number", "null"]}
+        holdings:
+          type: array
+          items:
+            $ref: "#/components/schemas/ParHolding"
+      required: [status, reason, level, label, scorePct, currentCvarPct, currentCvarInr, parCvarPct, parCvarInr, ratioToPar, maxComponentShareErrorPct, holdings]
+    PanicGameResult:
+      type: object
+      properties:
+        status: {type: string, enum: [ready, revealed, unavailable]}
+        lossLimitInr: {type: ["number", "null"]}
+        evaluatedScenarioCount: {type: integer}
+        withinLimitCount: {type: ["integer", "null"]}
+        coverageScorePct: {type: ["number", "null"]}
+        revealedOutcome: {type: ["string", "null"]}
+        reflection: {type: ["string", "null"], enum: [pause, coverage, assumptions, null]}
+        reflectionFeedback: {type: ["string", "null"]}
+        message: {type: string}
+      required: [status, lossLimitInr, evaluatedScenarioCount, withinLimitCount, coverageScorePct, revealedOutcome, reflection, reflectionFeedback, message]
+    CrashCard:
+      type: object
+      properties:
+        templateVersion: {type: string}
+        header: {type: string}
+        findings:
+          type: array
+          maxItems: 3
+          items: {type: string}
+        footer: {type: string}
+        text: {type: string}
+        wordCount: {type: integer, maximum: 119}
+      required: [templateVersion, header, findings, footer, text, wordCount]
+    ResilienceReport:
+      type: object
+      properties:
+        source: {type: string}
+        checkedAt: {type: string}
+        valuationDate: {type: ["string", "null"]}
+        portfolioValueInr: {type: ["number", "null"]}
+        settings:
+          $ref: "#/components/schemas/GameSettings"
+        evaluatedScenarioCount: {type: integer}
+        hiddenScenarioDigest: {type: ["string", "null"]}
+        historyKind: {type: string, enum: [observed, proxy, mixed, insufficient]}
+        coverageStatus: {type: string, enum: [complete, incomplete, unavailable]}
+        coverageStart: {type: ["string", "null"]}
+        coverageEnd: {type: ["string", "null"]}
+        validReturnCount: {type: integer}
+        excludedIntervalCount: {type: integer}
+        instruments:
+          type: array
+          items:
+            $ref: "#/components/schemas/RiskInstrumentCoverage"
+        levels:
+          $ref: "#/components/schemas/PortfolioLevels"
+        panicGame:
+          $ref: "#/components/schemas/PanicGameResult"
+        crashCard:
+          $ref: "#/components/schemas/CrashCard"
+        notes:
+          type: array
+          items: {type: string}
+      required: [source, checkedAt, valuationDate, portfolioValueInr, settings, evaluatedScenarioCount, hiddenScenarioDigest, historyKind, coverageStatus, coverageStart, coverageEnd, validReturnCount, excludedIntervalCount, instruments, levels, panicGame, crashCard, notes]
 

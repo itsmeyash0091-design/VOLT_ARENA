@@ -550,6 +550,17 @@ def dispatch(payload: Any) -> dict[str, Any]:
             payload.get("holdings"), payload.get("scenarioId"),
             payload.get("overrides"), payload.get("targetLossPct", "20"),
         )
+    if operation == "get_game_settings":
+        from resilience import game_settings
+
+        return game_settings()
+    if operation == "analyze_resilience":
+        from resilience import analyze_resilience
+
+        return analyze_resilience(payload.get("holdings"), {
+            key: payload[key] for key in ("confidencePct", "horizonTradingDays", "lossLimitInr", "reflection")
+            if key in payload
+        })
     raise _error("Unsupported engine operation.", code="unsupported_operation")
 
 

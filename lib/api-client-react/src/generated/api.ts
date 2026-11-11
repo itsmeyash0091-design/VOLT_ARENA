@@ -27,6 +27,7 @@ import type {
 import type {
   CsvPreviewInput,
   CsvPreviewReport,
+  GameSettings,
   HealthStatus,
   MarketDataUniverse,
   PortfolioInputError,
@@ -36,6 +37,8 @@ import type {
   PortfolioStressInput,
   PortfolioStressReport,
   PortfolioValidationReport,
+  ResilienceInput,
+  ResilienceReport,
   StaticScenarioLibrary
 } from './api.schemas';
 
@@ -811,5 +814,194 @@ export const useRunPortfolioStress = <TError = ErrorType<PortfolioInputError>,
         TContext
       > => {
       return useMutation(getRunPortfolioStressMutationOptions(options), queryClient);
+    }
+
+export const getGetGameSettingsUrl = () => {
+
+
+
+
+  return `/api/game/settings`
+}
+
+/**
+ * @summary Get Python-owned scoring rules and benchmark assumptions
+ */
+export const getGameSettings = async ( options?: Parameters<typeof customFetch>[1]): Promise<GameSettings> => {
+
+  return customFetch<GameSettings>(getGetGameSettingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGameSettingsQueryKey = () => {
+    return [
+    `/api/game/settings`
+    ] as const;
+    }
+
+
+export const getGetGameSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getGameSettings>>, TError = ErrorType<PortfolioInputError>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGameSettings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGameSettingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGameSettings>>> = ({ signal }) => getGameSettings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGameSettings>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetGameSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getGameSettings>>>
+export type GetGameSettingsQueryError = ErrorType<PortfolioInputError>
+
+
+export function useGetGameSettings<TData = Awaited<ReturnType<typeof getGameSettings>>, TError = ErrorType<PortfolioInputError>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGameSettings>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGameSettings>>,
+          TError,
+          Awaited<ReturnType<typeof getGameSettings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGameSettings<TData = Awaited<ReturnType<typeof getGameSettings>>, TError = ErrorType<PortfolioInputError>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGameSettings>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGameSettings>>,
+          TError,
+          Awaited<ReturnType<typeof getGameSettings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGameSettings<TData = Awaited<ReturnType<typeof getGameSettings>>, TError = ErrorType<PortfolioInputError>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGameSettings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Python-owned scoring rules and benchmark assumptions
+ */
+
+export function useGetGameSettings<TData = Awaited<ReturnType<typeof getGameSettings>>, TError = ErrorType<PortfolioInputError>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGameSettings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetGameSettingsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getAnalyzePortfolioResilienceUrl = () => {
+
+
+
+
+  return `/api/portfolio/resilience`
+}
+
+/**
+ * @summary Run 500 hidden scenarios, certified CVaR par Levels, panic rehearsal, and Crash Card
+ */
+export const analyzePortfolioResilience = async (resilienceInput: ResilienceInput, options?: Parameters<typeof customFetch>[1]): Promise<ResilienceReport> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ResilienceReport>(getAnalyzePortfolioResilienceUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(resilienceInput)
+  }
+);}
+
+
+
+
+
+export const getAnalyzePortfolioResilienceMutationKey = () => ['analyzePortfolioResilience'] as const;
+
+export const getAnalyzePortfolioResilienceMutationOptions = <TError = ErrorType<PortfolioInputError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof analyzePortfolioResilience>>, TError,AnalyzePortfolioResilienceMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof analyzePortfolioResilience>>, TError,AnalyzePortfolioResilienceMutationVariables, TContext> => {
+
+const mutationKey = getAnalyzePortfolioResilienceMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof analyzePortfolioResilience>>, AnalyzePortfolioResilienceMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  analyzePortfolioResilience(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AnalyzePortfolioResilienceMutationResult = NonNullable<Awaited<ReturnType<typeof analyzePortfolioResilience>>>
+    export type AnalyzePortfolioResilienceMutationBody = BodyType<ResilienceInput>
+    export type AnalyzePortfolioResilienceMutationError = ErrorType<PortfolioInputError>
+    export type AnalyzePortfolioResilienceMutationVariables = {data: BodyType<ResilienceInput>}
+
+    /**
+ * @summary Run 500 hidden scenarios, certified CVaR par Levels, panic rehearsal, and Crash Card
+ */
+export const useAnalyzePortfolioResilience = <TError = ErrorType<PortfolioInputError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof analyzePortfolioResilience>>, TError,AnalyzePortfolioResilienceMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof analyzePortfolioResilience>>,
+        TError,
+        AnalyzePortfolioResilienceMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAnalyzePortfolioResilienceMutationOptions(options), queryClient);
     }
 

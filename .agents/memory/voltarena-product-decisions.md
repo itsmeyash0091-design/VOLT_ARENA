@@ -26,3 +26,19 @@ The user requires fixed-seed joint block bootstrap of real return vectors, prese
 **Why:** These are explicit Stage 3 MVP constraints, not interchangeable implementation defaults.
 
 **How to apply:** Preserve joint row alignment and within-block order in future optimizations. Inadequate source coverage must remain disclosed rather than replaced with invented prices. Reverse stress in this MVP scales a static hypothetical pattern; later Crash Cards and game copy must not describe its output as a probability or the most likely future event.
+
+## CVaR par and panic-game interpretation
+
+The user requires the equal component-CVaR benchmark over current holdings only, long-only and fully invested, with no replacement benchmark when unavailable. Defaults are configurable 95% confidence and one trading day. The panic limit coverage percentage is separate from Levels and must not be presented as a skill grade or a recommendation to accept more loss.
+
+**Why:** The user explicitly chose equal component-CVaR, not minimum risk, equal weights or volatility parity. A declared loss limit can be increased arbitrarily and is not a portfolio-quality measure.
+
+**How to apply:** Preserve the distinction in future game/card copy. Solver status alone is not proof: nonsmooth/tied empirical CVaR can produce a limited-precision status even for a candidate passing independent tail-dual and equal-component checks. Never bypass or loosen those checks to force Levels to appear.
+
+## Live-source repeatability
+
+The same symbols, holdings, seed and coverage dates do not prove identical market-data inputs. Fresh Yahoo-backed requests produced different sampled-input digests and tiny high-precision risk differences while frozen-source runs matched across separate Python processes.
+
+**Why:** Deterministic calculations cannot guarantee a third-party live feed will return byte-identical adjusted history.
+
+**How to apply:** Compare input digests before attributing changes to random sampling. Disclose live-source variation; do not round or fill observed prices merely to force agreement. A future public-data snapshot policy needs explicit documentation, not a false claim of live-feed repeatability.
