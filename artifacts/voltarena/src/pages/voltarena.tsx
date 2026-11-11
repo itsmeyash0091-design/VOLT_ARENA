@@ -4,6 +4,7 @@ import {
   Clock3, FileSpreadsheet, FileText, Info, LoaderCircle, Plus, RotateCcw,
   ShieldCheck, Sparkles, Trash2, Upload, X,
 } from 'lucide-react';
+import { AppShell } from '@/components/app-shell';
 import { RiskAnalysis } from '@/components/risk-analysis';
 import { StressLab } from '@/components/stress-lab';
 import { ResilienceLab } from '@/components/resilience-lab';
@@ -34,10 +35,6 @@ function normalizeType(value: string): InstrumentType {
 function errorMessage(error: unknown): string {
   if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') return error.message;
   return 'Something interrupted the request. Please try again.';
-}
-
-function AppMark() {
-  return <div className="brand-mark" aria-hidden="true"><span /><span /><span /><span /></div>;
 }
 
 function SectionHeading({ number, title, note }: { number: string; title: string; note: string }) {
@@ -203,28 +200,7 @@ function App() {
     });
   };
 
-  return <main className="workspace">
-    <header className="topbar">
-      <a href="/" className="brand" aria-label="VoltArena home"><AppMark /><span>VoltArena</span><i>FIELDNOTES / 01</i></a>
-      <div className="topbar-right"><span className="privacy"><ShieldCheck size={14} /> Session only</span><span className="stage-chip"><span /> STAGE 01</span></div>
-    </header>
-
-    <section className="intro enter">
-      <div className="intro-copy">
-        <div className="eyebrow"><span className="eyebrow-rule" /> PORTFOLIO INTAKE &amp; DATA QUALITY</div>
-        <h1>Know what the<br /><em>data can tell you.</em></h1>
-        <p className="intro-deck">Bring your holdings. We’ll show you where the market history comes from, how far it reaches, and where it needs a closer look.</p>
-        <div className="scope-note"><Info size={15} /><span>Inspection only. No portfolio is saved, and no analysis runs without your confirmation.</span></div>
-      </div>
-      <div className="intro-index" aria-label="Three steps">
-        <div className="index-line" />
-        <div className="index-step active"><b>01</b><span>Input</span></div>
-        <div className="index-step"><b>02</b><span>Confirm</span></div>
-        <div className="index-step"><b>03</b><span>Inspect</span></div>
-        <div className="index-caption mono">YOUR DATA STAYS HERE</div>
-      </div>
-    </section>
-
+  return <AppShell><main className="workspace">
     <div className="content-grid">
       <section className="main-column" inert={inspect.isPending} aria-busy={inspect.isPending}>
         <div className="panel holdings-panel enter-delay">
@@ -329,8 +305,7 @@ function App() {
       holdings={holdings.map(({ rowId: _rowId, ...holding }) => ({ ...holding, quantity: String(holding.quantity) }))}
     />}
 
-    <footer className="footer"><div className="footer-mark"><AppMark /><span>VoltArena</span></div><p>Stage 01 / Intake · Stage 02 / Replay &amp; risk · Stage 03 / Stress &amp; simulation · Stage 04 / Levels &amp; rehearsal</p><span className="footer-session"><ShieldCheck size={13} /> Session-only workspace</span></footer>
-  </main>;
+  </main></AppShell>;
 }
 
 function InstrumentCard({ item, index }: { item: InstrumentMarketReport; index: number }) {
