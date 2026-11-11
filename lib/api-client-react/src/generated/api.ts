@@ -33,7 +33,10 @@ import type {
   PortfolioInspectInput,
   PortfolioInspectReport,
   PortfolioRiskAnalysisReport,
-  PortfolioValidationReport
+  PortfolioStressInput,
+  PortfolioStressReport,
+  PortfolioValidationReport,
+  StaticScenarioLibrary
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -619,5 +622,194 @@ export const useAnalyzePortfolioRisk = <TError = ErrorType<PortfolioInputError>,
         TContext
       > => {
       return useMutation(getAnalyzePortfolioRiskMutationOptions(options), queryClient);
+    }
+
+export const getGetStaticScenariosUrl = () => {
+
+
+
+
+  return `/api/scenarios`
+}
+
+/**
+ * @summary Get the checked-in hypothetical JSON scenario library and simulation defaults
+ */
+export const getStaticScenarios = async ( options?: Parameters<typeof customFetch>[1]): Promise<StaticScenarioLibrary> => {
+
+  return customFetch<StaticScenarioLibrary>(getGetStaticScenariosUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetStaticScenariosQueryKey = () => {
+    return [
+    `/api/scenarios`
+    ] as const;
+    }
+
+
+export const getGetStaticScenariosQueryOptions = <TData = Awaited<ReturnType<typeof getStaticScenarios>>, TError = ErrorType<PortfolioInputError>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaticScenarios>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetStaticScenariosQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStaticScenarios>>> = ({ signal }) => getStaticScenarios({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStaticScenarios>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetStaticScenariosQueryResult = NonNullable<Awaited<ReturnType<typeof getStaticScenarios>>>
+export type GetStaticScenariosQueryError = ErrorType<PortfolioInputError>
+
+
+export function useGetStaticScenarios<TData = Awaited<ReturnType<typeof getStaticScenarios>>, TError = ErrorType<PortfolioInputError>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaticScenarios>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStaticScenarios>>,
+          TError,
+          Awaited<ReturnType<typeof getStaticScenarios>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetStaticScenarios<TData = Awaited<ReturnType<typeof getStaticScenarios>>, TError = ErrorType<PortfolioInputError>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaticScenarios>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStaticScenarios>>,
+          TError,
+          Awaited<ReturnType<typeof getStaticScenarios>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetStaticScenarios<TData = Awaited<ReturnType<typeof getStaticScenarios>>, TError = ErrorType<PortfolioInputError>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaticScenarios>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the checked-in hypothetical JSON scenario library and simulation defaults
+ */
+
+export function useGetStaticScenarios<TData = Awaited<ReturnType<typeof getStaticScenarios>>, TError = ErrorType<PortfolioInputError>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaticScenarios>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetStaticScenariosQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getRunPortfolioStressUrl = () => {
+
+
+
+
+  return `/api/portfolio/stress-analysis`
+}
+
+/**
+ * @summary Calculate hypothetical scenario impact, reverse stress, and joint-block Monte Carlo in Python
+ */
+export const runPortfolioStress = async (portfolioStressInput: PortfolioStressInput, options?: Parameters<typeof customFetch>[1]): Promise<PortfolioStressReport> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<PortfolioStressReport>(getRunPortfolioStressUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(portfolioStressInput)
+  }
+);}
+
+
+
+
+
+export const getRunPortfolioStressMutationKey = () => ['runPortfolioStress'] as const;
+
+export const getRunPortfolioStressMutationOptions = <TError = ErrorType<PortfolioInputError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runPortfolioStress>>, TError,RunPortfolioStressMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof runPortfolioStress>>, TError,RunPortfolioStressMutationVariables, TContext> => {
+
+const mutationKey = getRunPortfolioStressMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof runPortfolioStress>>, RunPortfolioStressMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  runPortfolioStress(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RunPortfolioStressMutationResult = NonNullable<Awaited<ReturnType<typeof runPortfolioStress>>>
+    export type RunPortfolioStressMutationBody = BodyType<PortfolioStressInput>
+    export type RunPortfolioStressMutationError = ErrorType<PortfolioInputError>
+    export type RunPortfolioStressMutationVariables = {data: BodyType<PortfolioStressInput>}
+
+    /**
+ * @summary Calculate hypothetical scenario impact, reverse stress, and joint-block Monte Carlo in Python
+ */
+export const useRunPortfolioStress = <TError = ErrorType<PortfolioInputError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runPortfolioStress>>, TError,RunPortfolioStressMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof runPortfolioStress>>,
+        TError,
+        RunPortfolioStressMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRunPortfolioStressMutationOptions(options), queryClient);
     }
 

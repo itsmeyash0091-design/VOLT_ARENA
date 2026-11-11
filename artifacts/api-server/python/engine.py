@@ -539,6 +539,17 @@ def dispatch(payload: Any) -> dict[str, Any]:
         from risk_analysis import analyze_portfolio_risk
 
         return analyze_portfolio_risk(payload.get("holdings"))
+    if operation == "get_static_scenarios":
+        from scenarios import get_library
+
+        return get_library()
+    if operation == "run_portfolio_stress":
+        from stress_analysis import run_portfolio_stress
+
+        return run_portfolio_stress(
+            payload.get("holdings"), payload.get("scenarioId"),
+            payload.get("overrides"), payload.get("targetLossPct", "20"),
+        )
     raise _error("Unsupported engine operation.", code="unsupported_operation")
 
 

@@ -337,3 +337,198 @@ export interface PortfolioRiskAnalysisReport {
   methodNotes: string[];
 }
 
+export interface ScenarioOverrides {
+  stockShockPct?: string;
+  etfShockPct?: string;
+}
+
+export interface PortfolioStressInput {
+  /**
+     * @minItems 1
+     * @maxItems 50
+     */
+  holdings: PortfolioHolding[];
+  scenarioId: string;
+  overrides?: ScenarioOverrides;
+  targetLossPct?: string;
+}
+
+export interface SimulationConfig {
+  horizonTradingDays: number;
+  pathCount: number;
+  blockTradingDays: number;
+  seed: number;
+}
+
+export type ScenarioDefinitionKind = typeof ScenarioDefinitionKind[keyof typeof ScenarioDefinitionKind];
+
+
+export const ScenarioDefinitionKind = {
+  'hypothetical-static-json': 'hypothetical-static-json',
+} as const;
+
+export interface ScenarioDefinition {
+  id: string;
+  name: string;
+  description: string;
+  kind: ScenarioDefinitionKind;
+  stockShockPct: number;
+  etfShockPct: number;
+  adjustments: string[];
+}
+
+export interface ShockBounds {
+  min: number;
+  max: number;
+}
+
+export type StaticScenarioLibraryKind = typeof StaticScenarioLibraryKind[keyof typeof StaticScenarioLibraryKind];
+
+
+export const StaticScenarioLibraryKind = {
+  'hypothetical-static-json': 'hypothetical-static-json',
+} as const;
+
+export interface StaticScenarioLibrary {
+  version: number;
+  kind: StaticScenarioLibraryKind;
+  shockBoundsPct: ShockBounds;
+  simulation: SimulationConfig;
+  scenarios: ScenarioDefinition[];
+  notes: string[];
+}
+
+export interface ShockHoldingResult {
+  ticker: string;
+  exchange: string;
+  shockPct: number;
+  impactInr: number;
+  stressedValueInr: number;
+}
+
+export type ScenarioImpactStatus = typeof ScenarioImpactStatus[keyof typeof ScenarioImpactStatus];
+
+
+export const ScenarioImpactStatus = {
+  available: 'available',
+  unavailable: 'unavailable',
+} as const;
+
+export type ScenarioImpact = ScenarioDefinition & ({
+  status: ScenarioImpactStatus;
+  /** @nullable */
+  impactInr: number | null;
+  /** @nullable */
+  lossPct: number | null;
+  /** @nullable */
+  stressedValueInr: number | null;
+  holdings: ShockHoldingResult[];
+  notes: string[];
+});
+
+export type ReverseStressResultKind = typeof ReverseStressResultKind[keyof typeof ReverseStressResultKind];
+
+
+export const ReverseStressResultKind = {
+  'hypothetical-static-json': 'hypothetical-static-json',
+} as const;
+
+export type ReverseStressResultStatus = typeof ReverseStressResultStatus[keyof typeof ReverseStressResultStatus];
+
+
+export const ReverseStressResultStatus = {
+  available: 'available',
+  unavailable: 'unavailable',
+} as const;
+
+export interface ReverseStressResult {
+  kind: ReverseStressResultKind;
+  status: ReverseStressResultStatus;
+  targetLossPct: number;
+  /** @nullable */
+  targetLossInr: number | null;
+  /** @nullable */
+  scaleMultiplier: number | null;
+  /** @nullable */
+  impactInr: number | null;
+  /** @nullable */
+  lossPct: number | null;
+  /** @nullable */
+  stressedValueInr: number | null;
+  holdings: ShockHoldingResult[];
+  notes: string[];
+}
+
+export interface SimulatedPath {
+  id: number;
+  valuesInr: number[];
+}
+
+export interface TerminalPercentile {
+  percentile: number;
+  valueInr: number;
+}
+
+export type MonteCarloResultKind = typeof MonteCarloResultKind[keyof typeof MonteCarloResultKind];
+
+
+export const MonteCarloResultKind = {
+  simulated: 'simulated',
+} as const;
+
+export type MonteCarloResultStatus = typeof MonteCarloResultStatus[keyof typeof MonteCarloResultStatus];
+
+
+export const MonteCarloResultStatus = {
+  complete: 'complete',
+  incomplete: 'incomplete',
+  unavailable: 'unavailable',
+} as const;
+
+export type MonteCarloResultHistoryKind = typeof MonteCarloResultHistoryKind[keyof typeof MonteCarloResultHistoryKind];
+
+
+export const MonteCarloResultHistoryKind = {
+  observed: 'observed',
+  proxy: 'proxy',
+  mixed: 'mixed',
+  insufficient: 'insufficient',
+} as const;
+
+export interface MonteCarloResult {
+  kind: MonteCarloResultKind;
+  status: MonteCarloResultStatus;
+  config: SimulationConfig;
+  /** @nullable */
+  coverageStart: string | null;
+  /** @nullable */
+  coverageEnd: string | null;
+  validReturnCount: number;
+  eligibleBlockCount: number;
+  excludedIntervalCount: number;
+  historyKind: MonteCarloResultHistoryKind;
+  instruments: RiskInstrumentCoverage[];
+  paths: SimulatedPath[];
+  terminalPercentiles: TerminalPercentile[];
+  /** @nullable */
+  lossProbabilityPct: number | null;
+  /** @nullable */
+  plotMinInr: number | null;
+  /** @nullable */
+  plotMaxInr: number | null;
+  notes: string[];
+}
+
+export interface PortfolioStressReport {
+  source: string;
+  checkedAt: string;
+  /** @nullable */
+  valuationDate: string | null;
+  /** @nullable */
+  portfolioValueInr: number | null;
+  scenario: ScenarioImpact;
+  reverseStress: ReverseStressResult;
+  monteCarlo: MonteCarloResult;
+  methodNotes: string[];
+}
+

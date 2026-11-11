@@ -5,6 +5,7 @@ import {
   ShieldCheck, Sparkles, Trash2, Upload, X,
 } from 'lucide-react';
 import { RiskAnalysis } from '@/components/risk-analysis';
+import { StressLab } from '@/components/stress-lab';
 import {
   useGetMarketDataUniverse,
   usePreviewPortfolioCsv,
@@ -312,12 +313,17 @@ function App() {
     </section>}
 
     {inspectReport && <RiskAnalysis
-      key={inspectReport.checkedAt}
+      key={`risk-${inspectReport.checkedAt}`}
       confirmed={Boolean(inspectReport)}
       holdings={holdings.map(({ rowId: _rowId, ...holding }) => ({ ...holding, quantity: String(holding.quantity) }))}
     />}
 
-    <footer className="footer"><div className="footer-mark"><AppMark /><span>VoltArena</span></div><p>Stage 01 / Intake · Stage 02 / Replay &amp; risk</p><span className="footer-session"><ShieldCheck size={13} /> Session-only workspace</span></footer>
+    {inspectReport && <StressLab
+      key={`stress-${inspectReport.checkedAt}`}
+      holdings={holdings.map(({ rowId: _rowId, ...holding }) => ({ ...holding, quantity: String(holding.quantity) }))}
+    />}
+
+    <footer className="footer"><div className="footer-mark"><AppMark /><span>VoltArena</span></div><p>Stage 01 / Intake · Stage 02 / Replay &amp; risk · Stage 03 / Stress &amp; simulation</p><span className="footer-session"><ShieldCheck size={13} /> Session-only workspace</span></footer>
   </main>;
 }
 

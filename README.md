@@ -1,6 +1,6 @@
-# VoltArena — Stage 1
+# VoltArena — Stages 1–3
 
-Indian listed-stock and ETF intake, market-history inspection, historical crash replay, recovery time, and volatility risk contribution. It does **not** provide trading recommendations.
+Indian listed-stock and ETF intake, market-history inspection, historical crash replay, recovery time, volatility risk contribution, static stress scenarios, reverse stress, and joint-block Monte Carlo. It does **not** provide trading recommendations.
 
 ## Run
 
@@ -29,6 +29,7 @@ TMPV is a special identity boundary: Yahoo attaches older TATAMOTORS rows to its
 
 See [Stage 1 verification](docs/stage-1-verification.md) for live-data results and independent checks.
 See [Stage 2 replay and risk methods](docs/stage-2-replay-risk.md) for event windows, coverage rules, recovery definition, and risk-contribution calculations.
+See [Stage 3 stress and simulation methods](docs/stage-3-stress-simulation.md) for static JSON validation, reverse stress, joint-block sampling, defaults, and limitations.
 
 ## Checks
 
@@ -41,4 +42,4 @@ The tests use explicitly artificial fixtures, never presented as real market dat
 
 ## Deliberately not implemented
 
-Monte Carlo, reverse stress tests, static scenarios, panic game, Crash Cards, and CVaR-par Levels remain later stages. No paid APIs, broker connections, LLM scenarios, buy/sell advice, authentication, or persistent personal-portfolio storage is included.
+Panic game, Crash Cards, and CVaR-par Levels remain later stages. No paid APIs, broker connections, LLM scenarios, buy/sell advice, authentication, or persistent personal-portfolio storage is included.

@@ -155,6 +155,54 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PortfolioInputError"
+  /scenarios:
+    get:
+      operationId: getStaticScenarios
+      tags: [portfolio]
+      summary: Get the checked-in hypothetical JSON scenario library and simulation defaults
+      responses:
+        "200":
+          description: Static scenarios
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaticScenarioLibrary"
+        "502":
+          description: Static library unavailable or invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioInputError"
+  /portfolio/stress-analysis:
+    post:
+      operationId: runPortfolioStress
+      tags: [portfolio]
+      summary: Calculate hypothetical scenario impact, reverse stress, and joint-block Monte Carlo in Python
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PortfolioStressInput"
+      responses:
+        "200":
+          description: Python-computed stress and simulated results with source provenance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioStressReport"
+        "400":
+          description: Invalid scenario, target, or holdings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioInputError"
+        "502":
+          description: Python engine unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioInputError"
 components:
   schemas:
     HealthStatus:
@@ -667,4 +715,177 @@ components:
           items:
             type: string
       required: [source, checkedAt, replayWindows, riskContribution, methodNotes]
+    ScenarioOverrides:
+      type: object
+      additionalProperties: false
+      properties:
+        stockShockPct: {type: string}
+        etfShockPct: {type: string}
+    PortfolioStressInput:
+      type: object
+      additionalProperties: false
+      properties:
+        holdings:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items:
+            $ref: "#/components/schemas/PortfolioHolding"
+        scenarioId: {type: string}
+        overrides:
+          $ref: "#/components/schemas/ScenarioOverrides"
+        targetLossPct: {type: string}
+      required: [holdings, scenarioId]
+    SimulationConfig:
+      type: object
+      properties:
+        horizonTradingDays: {type: integer}
+        pathCount: {type: integer}
+        blockTradingDays: {type: integer}
+        seed: {type: integer}
+      required: [horizonTradingDays, pathCount, blockTradingDays, seed]
+    ScenarioDefinition:
+      type: object
+      properties:
+        id: {type: string}
+        name: {type: string}
+        description: {type: string}
+        kind: {type: string, enum: [hypothetical-static-json]}
+        stockShockPct: {type: number}
+        etfShockPct: {type: number}
+        adjustments:
+          type: array
+          items: {type: string}
+      required: [id, name, description, kind, stockShockPct, etfShockPct, adjustments]
+    ShockBounds:
+      type: object
+      properties:
+        min: {type: number}
+        max: {type: number}
+      required: [min, max]
+    StaticScenarioLibrary:
+      type: object
+      properties:
+        version: {type: integer}
+        kind: {type: string, enum: [hypothetical-static-json]}
+        shockBoundsPct:
+          $ref: "#/components/schemas/ShockBounds"
+        simulation:
+          $ref: "#/components/schemas/SimulationConfig"
+        scenarios:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScenarioDefinition"
+        notes:
+          type: array
+          items: {type: string}
+      required: [version, kind, shockBoundsPct, simulation, scenarios, notes]
+    ShockHoldingResult:
+      type: object
+      properties:
+        ticker: {type: string}
+        exchange: {type: string}
+        shockPct: {type: number}
+        impactInr: {type: number}
+        stressedValueInr: {type: number}
+      required: [ticker, exchange, shockPct, impactInr, stressedValueInr]
+    ScenarioImpact:
+      allOf:
+        - $ref: "#/components/schemas/ScenarioDefinition"
+        - type: object
+          properties:
+            status: {type: string, enum: [available, unavailable]}
+            impactInr: {type: ["number", "null"]}
+            lossPct: {type: ["number", "null"]}
+            stressedValueInr: {type: ["number", "null"]}
+            holdings:
+              type: array
+              items:
+                $ref: "#/components/schemas/ShockHoldingResult"
+            notes:
+              type: array
+              items: {type: string}
+          required: [status, impactInr, lossPct, stressedValueInr, holdings, notes]
+    ReverseStressResult:
+      type: object
+      properties:
+        kind: {type: string, enum: [hypothetical-static-json]}
+        status: {type: string, enum: [available, unavailable]}
+        targetLossPct: {type: number}
+        targetLossInr: {type: ["number", "null"]}
+        scaleMultiplier: {type: ["number", "null"]}
+        impactInr: {type: ["number", "null"]}
+        lossPct: {type: ["number", "null"]}
+        stressedValueInr: {type: ["number", "null"]}
+        holdings:
+          type: array
+          items:
+            $ref: "#/components/schemas/ShockHoldingResult"
+        notes:
+          type: array
+          items: {type: string}
+      required: [kind, status, targetLossPct, targetLossInr, scaleMultiplier, impactInr, lossPct, stressedValueInr, holdings, notes]
+    SimulatedPath:
+      type: object
+      properties:
+        id: {type: integer}
+        valuesInr:
+          type: array
+          items: {type: number}
+      required: [id, valuesInr]
+    TerminalPercentile:
+      type: object
+      properties:
+        percentile: {type: number}
+        valueInr: {type: number}
+      required: [percentile, valueInr]
+    MonteCarloResult:
+      type: object
+      properties:
+        kind: {type: string, enum: [simulated]}
+        status: {type: string, enum: [complete, incomplete, unavailable]}
+        config:
+          $ref: "#/components/schemas/SimulationConfig"
+        coverageStart: {type: ["string", "null"]}
+        coverageEnd: {type: ["string", "null"]}
+        validReturnCount: {type: integer}
+        eligibleBlockCount: {type: integer}
+        excludedIntervalCount: {type: integer}
+        historyKind: {type: string, enum: [observed, proxy, mixed, insufficient]}
+        instruments:
+          type: array
+          items:
+            $ref: "#/components/schemas/RiskInstrumentCoverage"
+        paths:
+          type: array
+          items:
+            $ref: "#/components/schemas/SimulatedPath"
+        terminalPercentiles:
+          type: array
+          items:
+            $ref: "#/components/schemas/TerminalPercentile"
+        lossProbabilityPct: {type: ["number", "null"]}
+        plotMinInr: {type: ["number", "null"]}
+        plotMaxInr: {type: ["number", "null"]}
+        notes:
+          type: array
+          items: {type: string}
+      required: [kind, status, config, coverageStart, coverageEnd, validReturnCount, eligibleBlockCount, excludedIntervalCount, historyKind, instruments, paths, terminalPercentiles, lossProbabilityPct, plotMinInr, plotMaxInr, notes]
+    PortfolioStressReport:
+      type: object
+      properties:
+        source: {type: string}
+        checkedAt: {type: string}
+        valuationDate: {type: ["string", "null"]}
+        portfolioValueInr: {type: ["number", "null"]}
+        scenario:
+          $ref: "#/components/schemas/ScenarioImpact"
+        reverseStress:
+          $ref: "#/components/schemas/ReverseStressResult"
+        monteCarlo:
+          $ref: "#/components/schemas/MonteCarloResult"
+        methodNotes:
+          type: array
+          items: {type: string}
+      required: [source, checkedAt, valuationDate, portfolioValueInr, scenario, reverseStress, monteCarlo, methodNotes]
 

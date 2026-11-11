@@ -546,11 +546,15 @@ name = "repl-nix-workspace"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "numpy" },
     { name = "yfinance" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "yfinance", specifier = ">=1.8.0" }]
+requires-dist = [
+    { name = "numpy", specifier = "==2.5.4" },
+    { name = "yfinance", specifier = ">=1.8.0" },
+]
 
 [[package]]
 name = "requests"

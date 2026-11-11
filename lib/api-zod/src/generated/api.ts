@@ -293,3 +293,155 @@ export const AnalyzePortfolioRiskResponse = zod.object({
 })
 
 
+/**
+ * @summary Get the checked-in hypothetical JSON scenario library and simulation defaults
+ */
+export const GetStaticScenariosResponse = zod.object({
+  "version": zod.number().int(),
+  "kind": zod.enum(['hypothetical-static-json']),
+  "shockBoundsPct": zod.object({
+  "min": zod.number(),
+  "max": zod.number()
+}),
+  "simulation": zod.object({
+  "horizonTradingDays": zod.number().int(),
+  "pathCount": zod.number().int(),
+  "blockTradingDays": zod.number().int(),
+  "seed": zod.number().int()
+}),
+  "scenarios": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "kind": zod.enum(['hypothetical-static-json']),
+  "stockShockPct": zod.number(),
+  "etfShockPct": zod.number(),
+  "adjustments": zod.array(zod.string())
+})),
+  "notes": zod.array(zod.string())
+})
+
+
+/**
+ * @summary Calculate hypothetical scenario impact, reverse stress, and joint-block Monte Carlo in Python
+ */
+export const runPortfolioStressBodyHoldingsItemTickerMax = 20;
+
+
+export const runPortfolioStressBodyHoldingsItemTickerRegExp = new RegExp('^[A-Za-z0-9][A-Za-z0-9.&_-]*$');
+export const runPortfolioStressBodyHoldingsItemQuantityMax = 32;
+
+export const runPortfolioStressBodyHoldingsMax = 50;
+
+
+
+export const RunPortfolioStressBody = zod.object({
+  "holdings": zod.array(zod.object({
+  "ticker": zod.string().min(1).max(runPortfolioStressBodyHoldingsItemTickerMax).regex(runPortfolioStressBodyHoldingsItemTickerRegExp),
+  "exchange": zod.enum(['NSE', 'BSE']),
+  "instrumentType": zod.enum(['stock', 'etf']),
+  "quantity": zod.string().min(1).max(runPortfolioStressBodyHoldingsItemQuantityMax)
+})).min(1).max(runPortfolioStressBodyHoldingsMax),
+  "scenarioId": zod.string(),
+  "overrides": zod.object({
+  "stockShockPct": zod.string().optional(),
+  "etfShockPct": zod.string().optional()
+}).optional(),
+  "targetLossPct": zod.string().optional()
+})
+
+export const runPortfolioStressResponseMonteCarloInstrumentsItemObservationCountMin = 0;
+
+export const runPortfolioStressResponseMonteCarloInstrumentsItemMissingAlignedObservationsMin = 0;
+
+
+
+export const RunPortfolioStressResponse = zod.object({
+  "source": zod.string(),
+  "checkedAt": zod.string(),
+  "valuationDate": zod.string().nullable(),
+  "portfolioValueInr": zod.number().nullable(),
+  "scenario": zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "kind": zod.enum(['hypothetical-static-json']),
+  "stockShockPct": zod.number(),
+  "etfShockPct": zod.number(),
+  "adjustments": zod.array(zod.string())
+}).and(zod.object({
+  "status": zod.enum(['available', 'unavailable']),
+  "impactInr": zod.number().nullable(),
+  "lossPct": zod.number().nullable(),
+  "stressedValueInr": zod.number().nullable(),
+  "holdings": zod.array(zod.object({
+  "ticker": zod.string(),
+  "exchange": zod.string(),
+  "shockPct": zod.number(),
+  "impactInr": zod.number(),
+  "stressedValueInr": zod.number()
+})),
+  "notes": zod.array(zod.string())
+})),
+  "reverseStress": zod.object({
+  "kind": zod.enum(['hypothetical-static-json']),
+  "status": zod.enum(['available', 'unavailable']),
+  "targetLossPct": zod.number(),
+  "targetLossInr": zod.number().nullable(),
+  "scaleMultiplier": zod.number().nullable(),
+  "impactInr": zod.number().nullable(),
+  "lossPct": zod.number().nullable(),
+  "stressedValueInr": zod.number().nullable(),
+  "holdings": zod.array(zod.object({
+  "ticker": zod.string(),
+  "exchange": zod.string(),
+  "shockPct": zod.number(),
+  "impactInr": zod.number(),
+  "stressedValueInr": zod.number()
+})),
+  "notes": zod.array(zod.string())
+}),
+  "monteCarlo": zod.object({
+  "kind": zod.enum(['simulated']),
+  "status": zod.enum(['complete', 'incomplete', 'unavailable']),
+  "config": zod.object({
+  "horizonTradingDays": zod.number().int(),
+  "pathCount": zod.number().int(),
+  "blockTradingDays": zod.number().int(),
+  "seed": zod.number().int()
+}),
+  "coverageStart": zod.string().nullable(),
+  "coverageEnd": zod.string().nullable(),
+  "validReturnCount": zod.number().int(),
+  "eligibleBlockCount": zod.number().int(),
+  "excludedIntervalCount": zod.number().int(),
+  "historyKind": zod.enum(['observed', 'proxy', 'mixed', 'insufficient']),
+  "instruments": zod.array(zod.object({
+  "ticker": zod.string(),
+  "instrumentType": zod.enum(['stock', 'etf']),
+  "dataType": zod.enum(['observed', 'proxy', 'insufficient']),
+  "sourceSymbol": zod.string().nullable(),
+  "proxyInstrument": zod.string().nullable(),
+  "coverageStart": zod.coerce.date().nullable(),
+  "coverageEnd": zod.coerce.date().nullable(),
+  "observationCount": zod.number().int().min(runPortfolioStressResponseMonteCarloInstrumentsItemObservationCountMin),
+  "missingAlignedObservations": zod.number().int().min(runPortfolioStressResponseMonteCarloInstrumentsItemMissingAlignedObservationsMin),
+  "note": zod.string()
+})),
+  "paths": zod.array(zod.object({
+  "id": zod.number().int(),
+  "valuesInr": zod.array(zod.number())
+})),
+  "terminalPercentiles": zod.array(zod.object({
+  "percentile": zod.number(),
+  "valueInr": zod.number()
+})),
+  "lossProbabilityPct": zod.number().nullable(),
+  "plotMinInr": zod.number().nullable(),
+  "plotMaxInr": zod.number().nullable(),
+  "notes": zod.array(zod.string())
+}),
+  "methodNotes": zod.array(zod.string())
+})
+
+

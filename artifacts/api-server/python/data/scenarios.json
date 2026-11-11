@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "shockBoundsPct": {"min": -95, "max": 50},
+  "simulation": {"horizonTradingDays": 252, "pathCount": 1000, "blockTradingDays": 20, "seed": 20261111},
+  "scenarios": [
+    {"id": "broad-selloff", "name": "Broad sell-off", "description": "Hypothetical simultaneous decline across stocks and ETFs; not a historical event or forecast.", "stockShockPct": -20, "etfShockPct": -15},
+    {"id": "deep-equity-shock", "name": "Deep equity shock", "description": "Hypothetical severe equity decline with a smaller ETF decline. ETF holdings are not classified by underlying exposure.", "stockShockPct": -40, "etfShockPct": -25},
+    {"id": "uniform-decline", "name": "Uniform decline", "description": "Hypothetical equal decline for all holdings, irrespective of sector or ETF exposure.", "stockShockPct": -30, "etfShockPct": -30}
+  ]
+}

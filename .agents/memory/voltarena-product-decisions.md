@@ -18,3 +18,11 @@ Maximum source history is not automatically comparable current-instrument histor
 **Why:** Yahoo's TMPV series includes older TATAMOTORS history; NSE confirms the symbol change on 24 October 2025. The current business followed a demerger, so using the old series unchanged could misrepresent crash replay.
 
 **How to apply:** Keep pre-change TMPV history excluded unless a future, explicitly labeled and independently checked reconstruction is approved. A few raw-price spot-checks never validate full adjusted-return history.
+
+## Simulation and reverse-stress interpretation
+
+The user requires fixed-seed joint block bootstrap of real return vectors, preserving cross-asset co-movement: 252 trading-day horizon, 1,000 visible paths, and 20-day blocks. Do not substitute independent asset sampling, Gaussian returns, or LLM-generated scenarios.
+
+**Why:** These are explicit Stage 3 MVP constraints, not interchangeable implementation defaults.
+
+**How to apply:** Preserve joint row alignment and within-block order in future optimizations. Inadequate source coverage must remain disclosed rather than replaced with invented prices. Reverse stress in this MVP scales a static hypothetical pattern; later Crash Cards and game copy must not describe its output as a probability or the most likely future event.

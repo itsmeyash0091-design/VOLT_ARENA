@@ -5,6 +5,9 @@ import {
   InspectPortfolioMarketDataResponse,
   AnalyzePortfolioRiskBody,
   AnalyzePortfolioRiskResponse,
+  GetStaticScenariosResponse,
+  RunPortfolioStressBody,
+  RunPortfolioStressResponse,
   PortfolioInputError,
   PreviewPortfolioCsvBody,
   PreviewPortfolioCsvResponse,
@@ -132,6 +135,39 @@ router.post("/portfolio/risk-analysis", async (req, res): Promise<void> => {
     }
     req.log.error({ err }, "Unable to calculate portfolio replay and risk contribution");
     res.status(502).json({ error: "Portfolio risk analysis could not be completed by the Python engine." });
+  }
+});
+
+router.get("/scenarios", async (req, res): Promise<void> => {
+  try {
+    const data = await runPythonEngine("get_static_scenarios");
+    GetStaticScenariosResponse.parse(data);
+    res.json(data);
+  } catch (err) {
+    req.log.error({ err }, "Unable to load static scenario library");
+    res.status(502).json({ error: "The Python scenario library is unavailable." });
+  }
+});
+
+router.post("/portfolio/stress-analysis", async (req, res): Promise<void> => {
+  const parsed = RunPortfolioStressBody.extend({
+    overrides: RunPortfolioStressBody.shape.overrides.unwrap().strict().optional(),
+  }).strict().safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json(requestBodyError("Provide valid holdings, a static scenario, and numeric input strings."));
+    return;
+  }
+  try {
+    const data = await runPythonEngine("run_portfolio_stress", parsed.data);
+    RunPortfolioStressResponse.parse(data);
+    res.json(data);
+  } catch (err) {
+    if (err instanceof PythonInputError) {
+      res.status(400).json({ error: err.message, issues: err.issues });
+      return;
+    }
+    req.log.error({ err }, "Unable to calculate portfolio stress and simulations");
+    res.status(502).json({ error: "Stress analysis could not be completed by the Python engine." });
   }
 });
 
