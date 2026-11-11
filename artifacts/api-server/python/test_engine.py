@@ -109,13 +109,25 @@ class PortfolioValidationTests(unittest.TestCase):
 
 
 class MarketHistoryReportTests(unittest.TestCase):
+    def test_same_observed_fixture_produces_identical_diagnostics(self) -> None:
+        instrument = {
+            "ticker": "VEDL",
+            "exchange": "NSE",
+            "instrumentType": "stock",
+            "yahooSymbol": "VEDL.NS",
+        }
+        self.assertEqual(
+            _history_report(instrument, sample_history()),
+            _history_report(instrument, sample_history()),
+        )
+
     def test_report_exposes_coverage_gaps_jumps_and_split_actions(self) -> None:
         report = _history_report(
             {
-                "ticker": "TMPV",
+                "ticker": "VEDL",
                 "exchange": "NSE",
                 "instrumentType": "stock",
-                "yahooSymbol": "TMPV.NS",
+                "yahooSymbol": "VEDL.NS",
             },
             sample_history(),
         )
@@ -131,10 +143,10 @@ class MarketHistoryReportTests(unittest.TestCase):
     def test_exchange_timezone_date_is_not_shifted_to_utc_previous_day(self) -> None:
         report = _history_report(
             {
-                "ticker": "TMPV",
+                "ticker": "VEDL",
                 "exchange": "NSE",
                 "instrumentType": "stock",
-                "yahooSymbol": "TMPV.NS",
+                "yahooSymbol": "VEDL.NS",
             },
             sample_history(),
         )

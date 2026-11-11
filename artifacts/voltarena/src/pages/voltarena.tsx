@@ -4,25 +4,19 @@ import {
   Clock3, FileSpreadsheet, FileText, Info, LoaderCircle, Plus, RotateCcw,
   ShieldCheck, Sparkles, Trash2, Upload, X,
 } from 'lucide-react';
-import * as ApiClient from '@workspace/api-client-react';
-import type * as CurrentGeneratedApi from '../../../../lib/api-client-react/src/generated/api';
-import type {
-  Exchange, InstrumentMarketReport, InstrumentType,
-  PortfolioInspectReport, CsvPreviewReport, PortfolioInputIssue,
-} from '../../../../lib/api-client-react/src/generated/api.schemas';
-
-// The workspace package runtime points to its current generated source; its checked-in
-// declaration output can lag the OpenAPI generator, so keep the current source signatures.
-const generatedHooks = ApiClient as unknown as typeof CurrentGeneratedApi;
-const {
+import {
   useGetMarketDataUniverse,
   usePreviewPortfolioCsv,
   useValidatePortfolioInput,
   useInspectPortfolioMarketData,
-} = generatedHooks;
+} from '@workspace/api-client-react';
+import type {
+  Exchange, InstrumentMarketReport, InstrumentType,
+  PortfolioInspectReport, CsvPreviewReport, PortfolioInputIssue,
+} from '@workspace/api-client-react';
 
 type FieldKey = 'ticker' | 'exchange' | 'instrumentType' | 'quantity';
-type PortfolioHolding = { ticker: string; exchange: Exchange; instrumentType: InstrumentType; quantity: number };
+type PortfolioHolding = { ticker: string; exchange: Exchange; instrumentType: InstrumentType; quantity: string };
 type DraftHolding = PortfolioHolding & { rowId: string };
 
 const fieldNames: Record<FieldKey, string> = {
@@ -31,7 +25,7 @@ const fieldNames: Record<FieldKey, string> = {
 const defaultMap: Record<FieldKey, string> = { ticker: '', exchange: '', instrumentType: '', quantity: '' };
 
 function normalizeType(value: string): InstrumentType {
-  return value.toLowerCase().includes('etf') || value.toLowerCase().includes('fund') ? 'etf' : 'stock';
+  return value.trim().toLowerCase() === 'etf' ? 'etf' : 'stock';
 }
 
 function errorMessage(error: unknown): string {
@@ -72,6 +66,7 @@ function App() {
   const [reportError, setReportError] = useState('');
   const [validationIssues, setValidationIssues] = useState<PortfolioInputIssue[]>([]);
   const [validationError, setValidationError] = useState('');
+  const [manualError, setManualError] = useState('');
 
   const csvHeaders = csvPreview?.columns ?? [];
   const csvRows = csvPreview?.rows ?? [];
@@ -87,10 +82,12 @@ function App() {
     const tickerValid = /^[A-Z0-9][A-Z0-9.&_-]{0,19}$/.test(rawTicker);
     const quantityValid = rawQty !== '' && Number.isFinite(qty) && qty > 0;
     const exchangeValid = rawExchange === 'NSE' || rawExchange === 'BSE';
+    const rawType = value('instrumentType').toLowerCase();
+    const typeValid = !columnMap.instrumentType || rawType === 'stock' || rawType === 'etf';
     return {
       ticker: rawTicker, exchange: (exchangeValid ? rawExchange : 'NSE') as Exchange,
-      instrumentType: normalizeType(value('instrumentType')) as InstrumentType, quantity: qty,
-      valid: tickerValid && quantityValid && (columnMap.exchange === '' || exchangeValid),
+      instrumentType: normalizeType(value('instrumentType')) as InstrumentType, quantity: rawQty,
+      valid: tickerValid && quantityValid && typeValid && (columnMap.exchange === '' || exchangeValid),
     };
   }), [csvRows, csvHeaders, columnMap]);
   const validCsvRows = mappedHoldings.filter((row) => row.valid);
@@ -98,17 +95,26 @@ function App() {
   const reportHasPartial = !!report && report.summary.skipped > 0;
 
   const addHolding = () => {
+    if (inspect.isPending) return;
     const normalizedTicker = ticker.trim().toUpperCase();
     const qty = Number(quantity);
-    if (!/^[A-Z0-9][A-Z0-9.&_-]{0,19}$/.test(normalizedTicker) || !Number.isFinite(qty) || qty <= 0) return;
-    setHoldings((current) => [...current, { ticker: normalizedTicker, exchange, instrumentType, quantity: qty, rowId: crypto.randomUUID() }]);
+    if (!/^[A-Z0-9][A-Z0-9.&_-]{0,19}$/.test(normalizedTicker) || !Number.isFinite(qty) || qty <= 0) {
+      setManualError('Enter a valid exchange ticker and a positive, finite quantity.');
+      return;
+    }
+    if (holdings.length >= 50) {
+      setManualError('A session supports at most 50 holdings.');
+      return;
+    }
+    setManualError('');
+    setHoldings((current) => [...current, { ticker: normalizedTicker, exchange, instrumentType, quantity: quantity.trim(), rowId: crypto.randomUUID() }]);
     setTicker(''); setQuantity('');
     setReport(undefined); setReportError(''); setShowConfirm(false);
     setValidationIssues([]); setValidationError('');
   };
 
   const addCsvRows = () => {
-    if (!validCsvRows.length) return;
+    if (inspect.isPending || !validCsvRows.length || validCsvRows.length !== csvRows.length) return;
     setHoldings((current) => [...current, ...validCsvRows.map((row) => ({
       ticker: row.ticker, exchange: row.exchange, instrumentType: row.instrumentType,
       quantity: row.quantity, rowId: crypto.randomUUID(),
@@ -122,6 +128,11 @@ function App() {
   const onFile = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    if (file.size > 80_000) {
+      setCsvError('Choose a CSV smaller than 80 KB.');
+      event.target.value = '';
+      return;
+    }
     setCsvName(file.name); setCsvNotice('');
     const reader = new FileReader();
     reader.onload = () => {
@@ -171,6 +182,8 @@ function App() {
     setHoldings([]); setReport(undefined); setReportError(''); setShowConfirm(false);
     setCsvPreview(undefined); setCsvName(''); setCsvNotice(''); setCsvError('');
     setValidationIssues([]); setValidationError('');
+    setTicker(''); setQuantity(''); setManualError('');
+    preview.reset(); validate.reset(); inspect.reset();
   };
 
   const configured = universe.data?.instruments ?? [];
@@ -210,7 +223,7 @@ function App() {
     </section>
 
     <div className="content-grid">
-      <section className="main-column">
+      <section className="main-column" inert={inspect.isPending} aria-busy={inspect.isPending}>
         <div className="panel holdings-panel enter-delay">
           <SectionHeading number="01" title="Your holdings" note="Add positions one by one or bring a CSV from your broker." />
 
@@ -223,6 +236,7 @@ function App() {
               <label className="field quantity-field"><span>Quantity</span><input ref={quantityInputRef} data-testid="input-quantity" type="number" min="0.0001" step="any" value={quantity} onChange={(e) => setQuantity(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') addHolding(); }} placeholder="0" aria-label="Quantity" /></label>
               <button className="icon-add" onClick={addHolding} aria-label="Add holding" data-testid="button-add-holding"><Plus size={18} /></button>
             </div>
+            {manualError && <p className="inline-notice error-copy" role="alert">{manualError}</p>}
           </div>
 
           <div className="csv-zone">
@@ -231,11 +245,11 @@ function App() {
             </button> : preview.isPending ? <div className="csv-loading"><span className="skeleton-line" /><span className="skeleton-line short" /><small>Reading your CSV in memory…</small></div> : csvPreview ? <div className="csv-card">
               <div className="csv-file"><FileSpreadsheet size={17} /><div><strong>{csvName}</strong><small>{csvRows.length} source rows · map each field below</small></div><button className="subtle-icon" onClick={() => { setCsvPreview(undefined); setCsvName(''); }} aria-label="Remove CSV"><X size={16} /></button></div>
               <div className="mapping-grid">
-                {(Object.keys(fieldNames) as FieldKey[]).map((key) => <label className="map-field" key={key}><span>{fieldNames[key]} {key !== 'exchange' && <i>required</i>}</span><select value={columnMap[key]} onChange={(e) => setColumnMap((old) => ({ ...old, [key]: e.target.value }))}><option value="">Choose column</option>{csvHeaders.map((header) => <option value={header} key={header}>{header}</option>)}</select></label>)}
+                {(Object.keys(fieldNames) as FieldKey[]).map((key) => <label className="map-field" key={key}><span>{fieldNames[key]} {(key === 'ticker' || key === 'quantity') && <i>required</i>}</span><select data-testid={`select-map-${key}`} value={columnMap[key]} onChange={(e) => setColumnMap((old) => ({ ...old, [key]: e.target.value }))}><option value="">{key === 'exchange' ? 'Default: NSE' : key === 'instrumentType' ? 'Default: stock' : 'Choose column'}</option>{csvHeaders.map((header) => <option value={header} key={header}>{header}</option>)}</select></label>)}
               </div>
               <div className="preview-head"><span>ROW PREVIEW</span><span>{validCsvRows.length} ready / {csvRows.length} rows</span></div>
-              <div className="preview-table-wrap"><table className="preview-table"><thead><tr><th>Source row</th><th>Ticker</th><th>Exchange</th><th>Type</th><th>Quantity</th><th>Check</th></tr></thead><tbody>{mappedHoldings.slice(0, 5).map((row, index) => <tr key={`${row.ticker}-${index}`}><td className="mono">{csvRows[index]?.rowNumber ?? index + 2}</td><td className="mono">{row.ticker || '—'}</td><td>{row.exchange}</td><td>{row.instrumentType.toUpperCase()}</td><td className="mono">{Number.isFinite(row.quantity) ? row.quantity : '—'}</td><td><span className={`row-check ${row.valid ? 'good' : 'bad'}`}>{row.valid ? 'Ready' : 'Review'}</span></td></tr>)}</tbody></table></div>
-              <div className="csv-actions"><span>{csvRows.length > 5 ? `Showing 5 of ${csvRows.length} rows` : 'Rows with missing or invalid required fields will be skipped.'}</span><button className="button-primary compact" onClick={addCsvRows} disabled={!validCsvRows.length || holdings.length + validCsvRows.length > 50} data-testid="button-add-csv-rows"><Plus size={14} /> Add {validCsvRows.length} valid {validCsvRows.length === 1 ? 'row' : 'rows'}</button></div>
+              <div className="preview-table-wrap"><table className="preview-table"><thead><tr><th>Source row</th><th>Ticker</th><th>Exchange</th><th>Type</th><th>Quantity</th><th>Check</th></tr></thead><tbody>{mappedHoldings.map((row, index) => <tr key={`${row.ticker}-${index}`}><td className="mono">{csvRows[index]?.rowNumber ?? index + 2}</td><td className="mono">{row.ticker || '—'}</td><td>{row.exchange}</td><td>{row.instrumentType.toUpperCase()}</td><td className="mono">{row.quantity || '—'}</td><td><span className={`row-check ${row.valid ? 'good' : 'bad'}`}>{row.valid ? 'Ready' : 'Review mapping or source row'}</span></td></tr>)}</tbody></table></div>
+              <div className="csv-actions"><span>All rows must be valid. No invalid rows are silently skipped.</span><button className="button-primary compact" onClick={addCsvRows} disabled={!validCsvRows.length || validCsvRows.length !== csvRows.length || holdings.length + validCsvRows.length > 50} data-testid="button-add-csv-rows"><Plus size={14} /> Add {validCsvRows.length} {validCsvRows.length === 1 ? 'row' : 'rows'}</button></div>
              </div> : null}
             <input ref={fileRef} type="file" accept=".csv,text/csv" onChange={onFile} className="visually-hidden" data-testid="input-csv-file" />
             {csvNotice && <p className="inline-notice" role="status">{csvNotice}</p>}
@@ -262,8 +276,8 @@ function App() {
 
       <aside className="side-column">
         <div className="confirm-card">
-          <SectionHeading number="02" title="Ready to inspect?" note="Nothing is sent until you confirm below." />
-          <div className="privacy-list"><div><Check size={14} /><span>Holdings remain in this browser session</span></div><div><Check size={14} /><span>Inspection runs only after confirmation</span></div><div><Check size={14} /><span>No valuation or performance calculations</span></div></div>
+          <SectionHeading number="02" title="Ready to inspect?" note="Market history is fetched only after confirmation." />
+          <div className="privacy-list"><div><Check size={14} /><span>CSV preview and validation use temporary server memory; nothing is saved</span></div><div><Check size={14} /><span>Inspection runs only after confirmation</span></div><div><Check size={14} /><span>No valuation or performance calculations</span></div></div>
           {!showConfirm ? <button className="button-primary inspect-button" disabled={!canInspect || validate.isPending} onClick={beginValidation} data-testid="button-review-confirmation">{validate.isPending ? <><LoaderCircle className="spin" size={15} /> Validating rows…</> : <><span>Review &amp; confirm</span><ArrowRight size={16} /></>}</button> : <div className="confirmation-box" data-testid="confirmation-panel"><div className="confirm-heading"><span className="confirm-marker"><ShieldCheck size={16} /></span><div><strong>Confirm inspection</strong><small>{holdings.length} holding{holdings.length === 1 ? '' : 's'} will be sent for market-history inspection.</small></div><button onClick={() => setShowConfirm(false)} aria-label="Close confirmation"><X size={15} /></button></div><p>Market history will be retrieved from the configured source. Your holdings are not saved by VoltArena.</p><button className="button-primary confirm-action" onClick={confirmInspection} disabled={inspect.isPending} data-testid="button-confirm-inspection">{inspect.isPending ? <><LoaderCircle className="spin" size={15} /> Inspecting history…</> : <>Confirm and inspect <ArrowRight size={15} /></>}</button><button className="text-button cancel-confirm" onClick={() => setShowConfirm(false)}>Go back</button></div>}
           {!holdings.length && <div className="disabled-hint">Add at least one holding to prepare an inspection.</div>}
           {holdings.length > 50 && <div className="disabled-hint warning">The API supports up to 50 holdings per inspection.</div>}

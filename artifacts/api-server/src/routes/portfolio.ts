@@ -89,9 +89,9 @@ router.post("/portfolio/inspect", async (req, res): Promise<void> => {
   }
 
   try {
-    const data = InspectPortfolioMarketDataResponse.parse(
-      await runPythonEngine("inspect_portfolio", parsed.data),
-    );
+    const data = await runPythonEngine("inspect_portfolio", parsed.data);
+    // Validate without replacing Python's YYYY-MM-DD strings with coerced JS Dates.
+    InspectPortfolioMarketDataResponse.parse(data);
     res.json(data);
   } catch (err) {
     if (err instanceof PythonInputError) {

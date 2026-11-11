@@ -316,7 +316,7 @@ def _history_report(
         source_note = None
 
     if history.empty:
-        base["skipReason"] = "No daily history is available within the verified symbol period."
+        base["skipReason"] = "No daily history is available within the configured current-symbol period."
         base["adjustmentConcerns"] = [
             "No prices were filled, estimated, or replaced with a proxy.",
             (
@@ -509,6 +509,7 @@ def inspect_portfolio(
         "instruments": instruments,
         "dataNotes": [
             SOURCE_NOTE,
+            "As-of is the latest date returned by Yahoo; a current-day row may be provisional and is not a verified final exchange close.",
             "History is requested with period=max at daily interval; actual coverage is shown per symbol.",
             f"Potential calendar gaps are gaps longer than {CALENDAR_GAP_DAYS} calendar days; Indian exchange holidays are not excluded.",
             f"Adjusted-close moves of at least {SUSPICIOUS_ADJUSTED_MOVE_PCT:.0f}% between consecutive observed rows are flagged for review, not labeled as confirmed errors.",
