@@ -17,7 +17,9 @@ function errText(e: unknown): string {
   return 'The analysis service could not complete this rehearsal.';
 }
 
-export function Simulator({ holdings, inspectionKey }: { holdings: PortfolioHolding[]; inspectionKey?: string }) {
+export function Simulator({ holdings, inspectionKey, onResult }: { holdings: PortfolioHolding[]; inspectionKey?: string; onResult?: (r: ResilienceReport | undefined) => void }) {
+  const onResultRef = useRef(onResult);
+  onResultRef.current = onResult;
   const settings = useGetGameSettings();
   const run = useAnalyzePortfolioResilience();
   const req = useRef(0);
@@ -30,15 +32,15 @@ export function Simulator({ holdings, inspectionKey }: { holdings: PortfolioHold
   const s = settings.data;
   const pg = report?.panicGame;
 
-  const clear = () => { req.current++; setReport(undefined); setError(''); };
+  const clear = () => { req.current++; setReport(undefined); setError(''); onResultRef.current?.(undefined); };
   const reveal = () => {
     if (locked || run.isPending || !limit.trim()) return;
     const data: ResilienceInput = { holdings, lossLimitInr: limit.trim() };
     if (reflection) data.reflection = reflection;
     const id = ++req.current;
-    setReport(undefined); setError('');
+    setReport(undefined); setError(''); onResultRef.current?.(undefined);
     run.mutate({ data }, {
-      onSuccess: (r) => { if (id === req.current) setReport(r); },
+      onSuccess: (r) => { if (id === req.current) { setReport(r); onResultRef.current?.(r); } },
       onError: (e) => { if (id === req.current) setError(errText(e)); },
     });
   };

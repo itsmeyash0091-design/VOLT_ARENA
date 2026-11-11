@@ -10,11 +10,12 @@ import {
   useInspectPortfolioMarketData,
 } from '@workspace/api-client-react';
 import type {
-  Exchange, InstrumentType, PortfolioInspectReport, CsvPreviewReport, PortfolioInputIssue, InstrumentMarketReport,
+  Exchange, InstrumentType, PortfolioInspectReport, ResilienceReport, CsvPreviewReport, PortfolioInputIssue, InstrumentMarketReport,
 } from '@workspace/api-client-react';
 import { CrashAnalytics } from './crash-analytics';
 import { RiskLab } from './risk-lab';
 import { Simulator } from './simulator';
+import { ReportPage } from './report-page';
 import './portfolio-page.css';
 
 type StationId = 'portfolio' | 'crash' | 'risklab' | 'simulator' | 'report';
@@ -88,6 +89,14 @@ export default function PortfolioPage() {
   const [reportError, setReportError] = useState('');
   const [filter, setFilter] = useState('');
   const [openRow, setOpenRow] = useState<string>();
+  const [resilience, setResilience] = useState<{ key: string; result: ResilienceReport }>();
+  const inspectionKeyRef = useRef<string | undefined>(undefined);
+  inspectionKeyRef.current = report?.checkedAt;
+  const publishResilience = (key: string | undefined) => (r: ResilienceReport | undefined) => {
+    if (!key || key !== inspectionKeyRef.current) return;
+    setResilience(r ? { key, result: r } : undefined);
+  };
+  const sessionResilience = resilience && resilience.key === report?.checkedAt ? resilience.result : undefined;
 
   useEffect(() => {
     const on = () => setStation(readHash());
@@ -100,7 +109,7 @@ export default function PortfolioPage() {
   const sampleInstrument = configured.find((i) => i.ticker === 'VEDL' && i.exchange === 'NSE' && i.instrumentType === 'stock');
   const sampleLoaded = holdings.some((h) => h.rowId === sampleRowId);
 
-  const invalidate = () => { inputRevision.current += 1; setReport(undefined); setReportError(''); setShowConfirm(false); setIssues([]); setValidationError(''); };
+  const invalidate = () => { inputRevision.current += 1; setResilience(undefined); setReport(undefined); setReportError(''); setShowConfirm(false); setIssues([]); setValidationError(''); };
 
   const addManual = () => {
     if (inspect.isPending) return;
@@ -274,9 +283,12 @@ export default function PortfolioPage() {
         <RiskLab key={report?.checkedAt ?? 'none'} holdings={apiHoldings} inspectionKey={report?.checkedAt} />
       </main>
       <main className="pf-main" hidden={station !== 'simulator'}>
-        <Simulator key={report?.checkedAt ?? 'none'} holdings={apiHoldings} inspectionKey={report?.checkedAt} />
+        <Simulator key={report?.checkedAt ?? 'none'} holdings={apiHoldings} inspectionKey={report?.checkedAt} onResult={publishResilience(report?.checkedAt)} />
       </main>
-      {station === 'crash' || station === 'risklab' || station === 'simulator' ? null : station !== 'portfolio' ? <main className="pf-main"><div className="pf-await" data-testid="panel-awaiting-design">
+      <main className="pf-main pf-report-main" hidden={station !== 'report'}>
+        <ReportPage key={report?.checkedAt ?? 'none'} holdings={apiHoldings} inspectionKey={report?.checkedAt} result={sessionResilience} onResult={publishResilience(report?.checkedAt)} onReturn={() => go('portfolio')} />
+      </main>
+      {station === 'crash' || station === 'risklab' || station === 'simulator' || station === 'report' ? null : station !== 'portfolio' ? <main className="pf-main"><div className="pf-await" data-testid="panel-awaiting-design">
         <Radar size={18} /><div><b>Awaiting your next page design</b><p>{stations.find((s) => s.id === station)?.label}</p></div>
       </div></main> : <main className="pf-main">
         <div className="pf-tiles">
