@@ -1,0 +1,1 @@
+- [VoltArena MVP boundaries](voltarena-product-decisions.md) — Python owns all figures; portfolios stay session-only and history must retain clear source/proxy labels.
