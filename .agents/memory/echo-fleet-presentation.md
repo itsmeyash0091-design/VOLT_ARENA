@@ -15,8 +15,8 @@ For Stage 5 and following Stage 5 requests, preserve all 64 existing tests uncha
 
 **How to apply:** Carry these constraints into subsequent design briefs and reviews; presentation must not imply forecasts, real trading, or observed data where none exists.
 
-Use the user's five uploaded Stitch HTML exports and screenshots as the visual reference for Portfolio, Crash Analytics, Risk Lab, Simulator, and Report.
+Use the user's supplied Stitch HTML exports and screenshots as exact visual references, not starting points for a creative reinterpretation. Rebuild one supplied page at a time; wait for the user to supply the remaining page designs.
 
-**Why:** The user explicitly requested matching these supplied screens rather than exploring a new visual direction.
+**Why:** The user repeated that the current UI should be replaced and the latest Portfolio screenshot and ZIP matched exactly before building the other pages.
 
 **How to apply:** Match their typography, surfaces, navigation and layout, but not their illustrative financial figures, XP, badges, data-source claims, or advice. Those do not override the existing Python-only and provenance rules.

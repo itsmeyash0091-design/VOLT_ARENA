@@ -4,7 +4,7 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
-import VoltArena from '@/pages/voltarena';
+import PortfolioPage from '@/pages/portfolio-page';
 import {
   Route,
   Switch,
@@ -20,7 +20,7 @@ function Router() {
     // survives a page crash.
     <RoutedErrorBoundary>
       <Switch>
-        <Route path="/" component={VoltArena} />
+        <Route path="/" component={PortfolioPage} />
         <Route component={NotFound} />
       </Switch>
     </RoutedErrorBoundary>
