@@ -14,6 +14,7 @@ import type {
 } from '@workspace/api-client-react';
 import { CrashAnalytics } from './crash-analytics';
 import { RiskLab } from './risk-lab';
+import { Simulator } from './simulator';
 import './portfolio-page.css';
 
 type StationId = 'portfolio' | 'crash' | 'risklab' | 'simulator' | 'report';
@@ -272,7 +273,10 @@ export default function PortfolioPage() {
       <main className="pf-main" hidden={station !== 'risklab'}>
         <RiskLab key={report?.checkedAt ?? 'none'} holdings={apiHoldings} inspectionKey={report?.checkedAt} />
       </main>
-      {station === 'crash' || station === 'risklab' ? null : station !== 'portfolio' ? <main className="pf-main"><div className="pf-await" data-testid="panel-awaiting-design">
+      <main className="pf-main" hidden={station !== 'simulator'}>
+        <Simulator key={report?.checkedAt ?? 'none'} holdings={apiHoldings} inspectionKey={report?.checkedAt} />
+      </main>
+      {station === 'crash' || station === 'risklab' || station === 'simulator' ? null : station !== 'portfolio' ? <main className="pf-main"><div className="pf-await" data-testid="panel-awaiting-design">
         <Radar size={18} /><div><b>Awaiting your next page design</b><p>{stations.find((s) => s.id === station)?.label}</p></div>
       </div></main> : <main className="pf-main">
         <div className="pf-tiles">
