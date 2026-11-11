@@ -200,3 +200,4 @@ html, body { background: #0f131c; }
   .pf-ph-tools { flex-direction: column; } .pf-ph-tools input { width: 100%; }
   .pf-detail dl { grid-template-columns: 1fr 1fr; }
 }
+.pf-main[hidden] { display: none; }
