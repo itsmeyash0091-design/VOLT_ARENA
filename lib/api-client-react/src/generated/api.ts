@@ -32,6 +32,7 @@ import type {
   PortfolioInputError,
   PortfolioInspectInput,
   PortfolioInspectReport,
+  PortfolioRiskAnalysisReport,
   PortfolioValidationReport
 } from './api.schemas';
 
@@ -529,5 +530,94 @@ export const useInspectPortfolioMarketData = <TError = ErrorType<PortfolioInputE
         TContext
       > => {
       return useMutation(getInspectPortfolioMarketDataMutationOptions(options), queryClient);
+    }
+
+export const getAnalyzePortfolioRiskUrl = () => {
+
+
+
+
+  return `/api/portfolio/risk-analysis`
+}
+
+/**
+ * Python retrieves source history and calculates every financial figure. Holdings are not persisted. Missing stock history may only use an explicitly configured sector-index proxy; ETFs are never proxied.
+ * @summary Replay documented crash windows and calculate risk contribution and recovery
+ */
+export const analyzePortfolioRisk = async (portfolioInspectInput: PortfolioInspectInput, options?: Parameters<typeof customFetch>[1]): Promise<PortfolioRiskAnalysisReport> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<PortfolioRiskAnalysisReport>(getAnalyzePortfolioRiskUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(portfolioInspectInput)
+  }
+);}
+
+
+
+
+
+export const getAnalyzePortfolioRiskMutationKey = () => ['analyzePortfolioRisk'] as const;
+
+export const getAnalyzePortfolioRiskMutationOptions = <TError = ErrorType<PortfolioInputError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof analyzePortfolioRisk>>, TError,AnalyzePortfolioRiskMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof analyzePortfolioRisk>>, TError,AnalyzePortfolioRiskMutationVariables, TContext> => {
+
+const mutationKey = getAnalyzePortfolioRiskMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof analyzePortfolioRisk>>, AnalyzePortfolioRiskMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  analyzePortfolioRisk(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AnalyzePortfolioRiskMutationResult = NonNullable<Awaited<ReturnType<typeof analyzePortfolioRisk>>>
+    export type AnalyzePortfolioRiskMutationBody = BodyType<PortfolioInspectInput>
+    export type AnalyzePortfolioRiskMutationError = ErrorType<PortfolioInputError>
+    export type AnalyzePortfolioRiskMutationVariables = {data: BodyType<PortfolioInspectInput>}
+
+    /**
+ * @summary Replay documented crash windows and calculate risk contribution and recovery
+ */
+export const useAnalyzePortfolioRisk = <TError = ErrorType<PortfolioInputError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof analyzePortfolioRisk>>, TError,AnalyzePortfolioRiskMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof analyzePortfolioRisk>>,
+        TError,
+        AnalyzePortfolioRiskMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAnalyzePortfolioRiskMutationOptions(options), queryClient);
     }
 

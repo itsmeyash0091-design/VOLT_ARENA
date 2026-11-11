@@ -535,6 +535,10 @@ def dispatch(payload: Any) -> dict[str, Any]:
         return validate_holdings(payload.get("holdings"))
     if operation == "inspect_portfolio":
         return inspect_portfolio(payload.get("holdings"))
+    if operation == "analyze_portfolio_risk":
+        from risk_analysis import analyze_portfolio_risk
+
+        return analyze_portfolio_risk(payload.get("holdings"))
     raise _error("Unsupported engine operation.", code="unsupported_operation")
 
 
@@ -570,4 +574,6 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    # Keep shared engine exceptions/helpers identical when risk_analysis imports this script.
+    sys.modules.setdefault("engine", sys.modules[__name__])
     raise SystemExit(main())

@@ -1,6 +1,6 @@
 # VoltArena — Stage 1
 
-Indian listed-stock and ETF intake and market-history inspection. This stage does **not** calculate portfolio performance, risk, scores, or trading recommendations.
+Indian listed-stock and ETF intake, market-history inspection, historical crash replay, recovery time, and volatility risk contribution. It does **not** provide trading recommendations.
 
 ## Run
 
@@ -28,6 +28,7 @@ Missing values remain missing. No sector proxies are configured in Stage 1; ETFs
 TMPV is a special identity boundary: Yahoo attaches older TATAMOTORS rows to its current symbol. VoltArena conservatively excludes rows before the official symbol change on 24 October 2025 rather than presenting them as current TMPV history. The report discloses the exclusion. This is not a reconstructed total-return series for the demerger.
 
 See [Stage 1 verification](docs/stage-1-verification.md) for live-data results and independent checks.
+See [Stage 2 replay and risk methods](docs/stage-2-replay-risk.md) for event windows, coverage rules, recovery definition, and risk-contribution calculations.
 
 ## Checks
 
@@ -40,4 +41,4 @@ The tests use explicitly artificial fixtures, never presented as real market dat
 
 ## Deliberately not implemented
 
-Replay, Monte Carlo, reverse stress tests, risk contribution, recovery time, static scenarios, panic game, Crash Cards, and CVaR-par Levels remain later stages. No paid APIs, broker connections, LLM scenarios, buy/sell advice, authentication, or persistent personal-portfolio storage is included.
+Monte Carlo, reverse stress tests, static scenarios, panic game, Crash Cards, and CVaR-par Levels remain later stages. No paid APIs, broker connections, LLM scenarios, buy/sell advice, authentication, or persistent personal-portfolio storage is included.

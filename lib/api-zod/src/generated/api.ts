@@ -186,3 +186,110 @@ export const InspectPortfolioMarketDataResponse = zod.object({
 })
 
 
+/**
+ * Python retrieves source history and calculates every financial figure. Holdings are not persisted. Missing stock history may only use an explicitly configured sector-index proxy; ETFs are never proxied.
+ * @summary Replay documented crash windows and calculate risk contribution and recovery
+ */
+export const analyzePortfolioRiskBodyHoldingsItemTickerMax = 20;
+
+
+export const analyzePortfolioRiskBodyHoldingsItemTickerRegExp = new RegExp('^[A-Za-z0-9][A-Za-z0-9.&_-]*$');
+export const analyzePortfolioRiskBodyHoldingsItemQuantityMax = 32;
+
+export const analyzePortfolioRiskBodyHoldingsMax = 50;
+
+
+
+export const AnalyzePortfolioRiskBody = zod.object({
+  "holdings": zod.array(zod.object({
+  "ticker": zod.string().min(1).max(analyzePortfolioRiskBodyHoldingsItemTickerMax).regex(analyzePortfolioRiskBodyHoldingsItemTickerRegExp),
+  "exchange": zod.enum(['NSE', 'BSE']),
+  "instrumentType": zod.enum(['stock', 'etf']),
+  "quantity": zod.string().min(1).max(analyzePortfolioRiskBodyHoldingsItemQuantityMax)
+})).min(1).max(analyzePortfolioRiskBodyHoldingsMax)
+})
+
+export const analyzePortfolioRiskResponseReplayWindowsItemObservationCountMin = 0;
+
+export const analyzePortfolioRiskResponseReplayWindowsItemInstrumentsItemObservationCountMin = 0;
+
+export const analyzePortfolioRiskResponseReplayWindowsItemInstrumentsItemMissingAlignedObservationsMin = 0;
+
+export const analyzePortfolioRiskResponseRiskContributionObservationCountMin = 0;
+
+export const analyzePortfolioRiskResponseRiskContributionInstrumentsItemObservationCountMin = 0;
+
+export const analyzePortfolioRiskResponseRiskContributionInstrumentsItemMissingAlignedObservationsMin = 0;
+
+
+
+export const AnalyzePortfolioRiskResponse = zod.object({
+  "source": zod.string(),
+  "checkedAt": zod.coerce.date(),
+  "replayWindows": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "startDate": zod.coerce.date(),
+  "endDate": zod.coerce.date(),
+  "status": zod.enum(['complete', 'incomplete', 'unavailable']),
+  "coverageStart": zod.coerce.date().nullable(),
+  "coverageEnd": zod.coerce.date().nullable(),
+  "observationCount": zod.number().int().min(analyzePortfolioRiskResponseReplayWindowsItemObservationCountMin),
+  "maxDrawdownPct": zod.number().nullable(),
+  "peakValue": zod.number().nullable(),
+  "troughValue": zod.number().nullable(),
+  "troughDate": zod.coerce.date().nullable(),
+  "recoveryStatus": zod.enum(['recovered', 'not_recovered', 'incomplete', 'unavailable']),
+  "recoveryTradingDays": zod.number().int().nullable(),
+  "recoveryDate": zod.coerce.date().nullable(),
+  "path": zod.array(zod.object({
+  "date": zod.coerce.date(),
+  "portfolioValue": zod.number().describe('Python-calculated adjusted-close value in INR; not an account statement.'),
+  "normalizedValueIndex": zod.number().describe('Python-calculated series rebased to 100 at the first available replay observation.')
+})),
+  "instruments": zod.array(zod.object({
+  "ticker": zod.string(),
+  "instrumentType": zod.enum(['stock', 'etf']),
+  "dataType": zod.enum(['observed', 'proxy', 'insufficient']),
+  "sourceSymbol": zod.string().nullable(),
+  "proxyInstrument": zod.string().nullable(),
+  "coverageStart": zod.coerce.date().nullable(),
+  "coverageEnd": zod.coerce.date().nullable(),
+  "observationCount": zod.number().int().min(analyzePortfolioRiskResponseReplayWindowsItemInstrumentsItemObservationCountMin),
+  "missingAlignedObservations": zod.number().int().min(analyzePortfolioRiskResponseReplayWindowsItemInstrumentsItemMissingAlignedObservationsMin),
+  "note": zod.string()
+})),
+  "notes": zod.array(zod.string())
+})),
+  "riskContribution": zod.object({
+  "status": zod.enum(['complete', 'incomplete', 'unavailable']),
+  "coverageStart": zod.coerce.date().nullable(),
+  "coverageEnd": zod.coerce.date().nullable(),
+  "observationCount": zod.number().int().min(analyzePortfolioRiskResponseRiskContributionObservationCountMin),
+  "annualizedVolatilityPct": zod.number().nullable(),
+  "contributions": zod.array(zod.object({
+  "ticker": zod.string(),
+  "instrumentType": zod.enum(['stock', 'etf']),
+  "latestWeightPct": zod.number(),
+  "annualizedContributionPct": zod.number(),
+  "contributionPct": zod.number()
+})),
+  "explanation": zod.string(),
+  "instruments": zod.array(zod.object({
+  "ticker": zod.string(),
+  "instrumentType": zod.enum(['stock', 'etf']),
+  "dataType": zod.enum(['observed', 'proxy', 'insufficient']),
+  "sourceSymbol": zod.string().nullable(),
+  "proxyInstrument": zod.string().nullable(),
+  "coverageStart": zod.coerce.date().nullable(),
+  "coverageEnd": zod.coerce.date().nullable(),
+  "observationCount": zod.number().int().min(analyzePortfolioRiskResponseRiskContributionInstrumentsItemObservationCountMin),
+  "missingAlignedObservations": zod.number().int().min(analyzePortfolioRiskResponseRiskContributionInstrumentsItemMissingAlignedObservationsMin),
+  "note": zod.string()
+})),
+  "notes": zod.array(zod.string())
+}),
+  "methodNotes": zod.array(zod.string())
+})
+
+

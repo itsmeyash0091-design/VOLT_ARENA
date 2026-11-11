@@ -3,6 +3,8 @@ import {
   GetMarketDataUniverseResponse,
   InspectPortfolioMarketDataBody,
   InspectPortfolioMarketDataResponse,
+  AnalyzePortfolioRiskBody,
+  AnalyzePortfolioRiskResponse,
   PortfolioInputError,
   PreviewPortfolioCsvBody,
   PreviewPortfolioCsvResponse,
@@ -104,6 +106,32 @@ router.post("/portfolio/inspect", async (req, res): Promise<void> => {
     }
     req.log.error({ err }, "Unable to inspect portfolio market data");
     res.status(502).json({ error: "Market history could not be inspected by the Python engine." });
+  }
+});
+
+router.post("/portfolio/risk-analysis", async (req, res): Promise<void> => {
+  const parsed = AnalyzePortfolioRiskBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json(requestBodyError("Provide valid portfolio rows."));
+    return;
+  }
+
+  try {
+    const data = await runPythonEngine("analyze_portfolio_risk", parsed.data);
+    // Keep Python's date-only strings intact while validating the response.
+    AnalyzePortfolioRiskResponse.parse(data);
+    res.json(data);
+  } catch (err) {
+    if (err instanceof PythonInputError) {
+      const response: PortfolioInputError = {
+        error: err.message,
+        issues: err.issues,
+      };
+      res.status(400).json(response);
+      return;
+    }
+    req.log.error({ err }, "Unable to calculate portfolio replay and risk contribution");
+    res.status(502).json({ error: "Portfolio risk analysis could not be completed by the Python engine." });
   }
 });
 

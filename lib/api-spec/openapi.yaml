@@ -121,6 +121,40 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PortfolioInputError"
+  /portfolio/risk-analysis:
+    post:
+      operationId: analyzePortfolioRisk
+      tags: [portfolio]
+      summary: Replay documented crash windows and calculate risk contribution and recovery
+      description: >
+        Python retrieves source history and calculates every financial figure.
+        Holdings are not persisted. Missing stock history may only use an
+        explicitly configured sector-index proxy; ETFs are never proxied.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PortfolioInspectInput"
+      responses:
+        "200":
+          description: Historical replay, risk contribution, recovery, and per-instrument coverage
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioRiskAnalysisReport"
+        "400":
+          description: Invalid portfolio input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioInputError"
+        "502":
+          description: Market-data provider could not be reached
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioInputError"
 components:
   schemas:
     HealthStatus:
@@ -429,4 +463,208 @@ components:
           items:
             type: string
       required: [source, checkedAt, summary, instruments, dataNotes]
+    RiskInstrumentCoverage:
+      type: object
+      properties:
+        ticker:
+          type: string
+        instrumentType:
+          $ref: "#/components/schemas/InstrumentType"
+        dataType:
+          type: string
+          enum: [observed, proxy, insufficient]
+        sourceSymbol:
+          type: ["string", "null"]
+        proxyInstrument:
+          type: ["string", "null"]
+        coverageStart:
+          type: ["string", "null"]
+          format: date
+        coverageEnd:
+          type: ["string", "null"]
+          format: date
+        observationCount:
+          type: integer
+          minimum: 0
+        missingAlignedObservations:
+          type: integer
+          minimum: 0
+        note:
+          type: string
+      required:
+        - ticker
+        - instrumentType
+        - dataType
+        - sourceSymbol
+        - proxyInstrument
+        - coverageStart
+        - coverageEnd
+        - observationCount
+        - missingAlignedObservations
+        - note
+    ReplayPortfolioPoint:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        portfolioValue:
+          type: number
+          description: Python-calculated adjusted-close value in INR; not an account statement.
+        normalizedValueIndex:
+          type: number
+          description: Python-calculated series rebased to 100 at the first available replay observation.
+      required: [date, portfolioValue, normalizedValueIndex]
+    ReplayWindowResult:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [complete, incomplete, unavailable]
+        coverageStart:
+          type: ["string", "null"]
+          format: date
+        coverageEnd:
+          type: ["string", "null"]
+          format: date
+        observationCount:
+          type: integer
+          minimum: 0
+        maxDrawdownPct:
+          type: ["number", "null"]
+        peakValue:
+          type: ["number", "null"]
+        troughValue:
+          type: ["number", "null"]
+        troughDate:
+          type: ["string", "null"]
+          format: date
+        recoveryStatus:
+          type: string
+          enum: [recovered, not_recovered, incomplete, unavailable]
+        recoveryTradingDays:
+          type: ["integer", "null"]
+        recoveryDate:
+          type: ["string", "null"]
+          format: date
+        path:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReplayPortfolioPoint"
+        instruments:
+          type: array
+          items:
+            $ref: "#/components/schemas/RiskInstrumentCoverage"
+        notes:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - name
+        - startDate
+        - endDate
+        - status
+        - coverageStart
+        - coverageEnd
+        - observationCount
+        - maxDrawdownPct
+        - peakValue
+        - troughValue
+        - troughDate
+        - recoveryStatus
+        - recoveryTradingDays
+        - recoveryDate
+        - path
+        - instruments
+        - notes
+    RiskContributionItem:
+      type: object
+      properties:
+        ticker:
+          type: string
+        instrumentType:
+          $ref: "#/components/schemas/InstrumentType"
+        latestWeightPct:
+          type: number
+        annualizedContributionPct:
+          type: number
+        contributionPct:
+          type: number
+      required:
+        - ticker
+        - instrumentType
+        - latestWeightPct
+        - annualizedContributionPct
+        - contributionPct
+    PortfolioRiskContribution:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [complete, incomplete, unavailable]
+        coverageStart:
+          type: ["string", "null"]
+          format: date
+        coverageEnd:
+          type: ["string", "null"]
+          format: date
+        observationCount:
+          type: integer
+          minimum: 0
+        annualizedVolatilityPct:
+          type: ["number", "null"]
+        contributions:
+          type: array
+          items:
+            $ref: "#/components/schemas/RiskContributionItem"
+        explanation:
+          type: string
+        instruments:
+          type: array
+          items:
+            $ref: "#/components/schemas/RiskInstrumentCoverage"
+        notes:
+          type: array
+          items:
+            type: string
+      required:
+        - status
+        - coverageStart
+        - coverageEnd
+        - observationCount
+        - annualizedVolatilityPct
+        - contributions
+        - explanation
+        - instruments
+        - notes
+    PortfolioRiskAnalysisReport:
+      type: object
+      properties:
+        source:
+          type: string
+        checkedAt:
+          type: string
+          format: date-time
+        replayWindows:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReplayWindowResult"
+        riskContribution:
+          $ref: "#/components/schemas/PortfolioRiskContribution"
+        methodNotes:
+          type: array
+          items:
+            type: string
+      required: [source, checkedAt, replayWindows, riskContribution, methodNotes]
 

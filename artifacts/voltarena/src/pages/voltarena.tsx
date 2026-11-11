@@ -4,6 +4,7 @@ import {
   Clock3, FileSpreadsheet, FileText, Info, LoaderCircle, Plus, RotateCcw,
   ShieldCheck, Sparkles, Trash2, Upload, X,
 } from 'lucide-react';
+import { RiskAnalysis } from '@/components/risk-analysis';
 import {
   useGetMarketDataUniverse,
   usePreviewPortfolioCsv,
@@ -310,7 +311,13 @@ function App() {
       {inspectReport.instruments.length ? <div className="instrument-reports">{inspectReport.instruments.map((item, index) => <InstrumentCard item={item} index={index} key={`${item.exchange}-${item.ticker}-${index}`} />)}</div> : <div className="report-empty"><FileText size={20} /><span>The service returned no per-instrument results for this request.</span></div>}
     </section>}
 
-    <footer className="footer"><div className="footer-mark"><AppMark /><span>VoltArena</span></div><p>Stage 01 / Market history inspection</p><span className="footer-session"><ShieldCheck size={13} /> Session-only workspace</span></footer>
+    {inspectReport && <RiskAnalysis
+      key={inspectReport.checkedAt}
+      confirmed={Boolean(inspectReport)}
+      holdings={holdings.map(({ rowId: _rowId, ...holding }) => ({ ...holding, quantity: String(holding.quantity) }))}
+    />}
+
+    <footer className="footer"><div className="footer-mark"><AppMark /><span>VoltArena</span></div><p>Stage 01 / Intake · Stage 02 / Replay &amp; risk</p><span className="footer-session"><ShieldCheck size={13} /> Session-only workspace</span></footer>
   </main>;
 }
 

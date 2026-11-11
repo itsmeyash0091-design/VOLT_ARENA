@@ -211,3 +211,129 @@ export interface PortfolioInspectReport {
   dataNotes: string[];
 }
 
+export type RiskInstrumentCoverageDataType = typeof RiskInstrumentCoverageDataType[keyof typeof RiskInstrumentCoverageDataType];
+
+
+export const RiskInstrumentCoverageDataType = {
+  observed: 'observed',
+  proxy: 'proxy',
+  insufficient: 'insufficient',
+} as const;
+
+export interface RiskInstrumentCoverage {
+  ticker: string;
+  instrumentType: InstrumentType;
+  dataType: RiskInstrumentCoverageDataType;
+  /** @nullable */
+  sourceSymbol: string | null;
+  /** @nullable */
+  proxyInstrument: string | null;
+  /** @nullable */
+  coverageStart: string | null;
+  /** @nullable */
+  coverageEnd: string | null;
+  /** @minimum 0 */
+  observationCount: number;
+  /** @minimum 0 */
+  missingAlignedObservations: number;
+  note: string;
+}
+
+export interface ReplayPortfolioPoint {
+  date: string;
+  /** Python-calculated adjusted-close value in INR; not an account statement. */
+  portfolioValue: number;
+  /** Python-calculated series rebased to 100 at the first available replay observation. */
+  normalizedValueIndex: number;
+}
+
+export type ReplayWindowResultStatus = typeof ReplayWindowResultStatus[keyof typeof ReplayWindowResultStatus];
+
+
+export const ReplayWindowResultStatus = {
+  complete: 'complete',
+  incomplete: 'incomplete',
+  unavailable: 'unavailable',
+} as const;
+
+export type ReplayWindowResultRecoveryStatus = typeof ReplayWindowResultRecoveryStatus[keyof typeof ReplayWindowResultRecoveryStatus];
+
+
+export const ReplayWindowResultRecoveryStatus = {
+  recovered: 'recovered',
+  not_recovered: 'not_recovered',
+  incomplete: 'incomplete',
+  unavailable: 'unavailable',
+} as const;
+
+export interface ReplayWindowResult {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  status: ReplayWindowResultStatus;
+  /** @nullable */
+  coverageStart: string | null;
+  /** @nullable */
+  coverageEnd: string | null;
+  /** @minimum 0 */
+  observationCount: number;
+  /** @nullable */
+  maxDrawdownPct: number | null;
+  /** @nullable */
+  peakValue: number | null;
+  /** @nullable */
+  troughValue: number | null;
+  /** @nullable */
+  troughDate: string | null;
+  recoveryStatus: ReplayWindowResultRecoveryStatus;
+  /** @nullable */
+  recoveryTradingDays: number | null;
+  /** @nullable */
+  recoveryDate: string | null;
+  path: ReplayPortfolioPoint[];
+  instruments: RiskInstrumentCoverage[];
+  notes: string[];
+}
+
+export interface RiskContributionItem {
+  ticker: string;
+  instrumentType: InstrumentType;
+  latestWeightPct: number;
+  annualizedContributionPct: number;
+  contributionPct: number;
+}
+
+export type PortfolioRiskContributionStatus = typeof PortfolioRiskContributionStatus[keyof typeof PortfolioRiskContributionStatus];
+
+
+export const PortfolioRiskContributionStatus = {
+  complete: 'complete',
+  incomplete: 'incomplete',
+  unavailable: 'unavailable',
+} as const;
+
+export interface PortfolioRiskContribution {
+  status: PortfolioRiskContributionStatus;
+  /** @nullable */
+  coverageStart: string | null;
+  /** @nullable */
+  coverageEnd: string | null;
+  /** @minimum 0 */
+  observationCount: number;
+  /** @nullable */
+  annualizedVolatilityPct: number | null;
+  contributions: RiskContributionItem[];
+  explanation: string;
+  instruments: RiskInstrumentCoverage[];
+  notes: string[];
+}
+
+export interface PortfolioRiskAnalysisReport {
+  source: string;
+  checkedAt: string;
+  replayWindows: ReplayWindowResult[];
+  riskContribution: PortfolioRiskContribution;
+  methodNotes: string[];
+}
+
