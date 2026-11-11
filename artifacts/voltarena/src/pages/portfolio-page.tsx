@@ -13,6 +13,7 @@ import type {
   Exchange, InstrumentType, PortfolioInspectReport, CsvPreviewReport, PortfolioInputIssue, InstrumentMarketReport,
 } from '@workspace/api-client-react';
 import { CrashAnalytics } from './crash-analytics';
+import { RiskLab } from './risk-lab';
 import './portfolio-page.css';
 
 type StationId = 'portfolio' | 'crash' | 'risklab' | 'simulator' | 'report';
@@ -268,7 +269,10 @@ export default function PortfolioPage() {
       <main className="pf-main" hidden={station !== 'crash'}>
         <CrashAnalytics key={report?.checkedAt ?? 'none'} holdings={apiHoldings} inspectionKey={report?.checkedAt} onReturn={() => go('portfolio')} />
       </main>
-      {station === 'crash' ? null : station !== 'portfolio' ? <main className="pf-main"><div className="pf-await" data-testid="panel-awaiting-design">
+      <main className="pf-main" hidden={station !== 'risklab'}>
+        <RiskLab key={report?.checkedAt ?? 'none'} holdings={apiHoldings} inspectionKey={report?.checkedAt} />
+      </main>
+      {station === 'crash' || station === 'risklab' ? null : station !== 'portfolio' ? <main className="pf-main"><div className="pf-await" data-testid="panel-awaiting-design">
         <Radar size={18} /><div><b>Awaiting your next page design</b><p>{stations.find((s) => s.id === station)?.label}</p></div>
       </div></main> : <main className="pf-main">
         <div className="pf-tiles">
