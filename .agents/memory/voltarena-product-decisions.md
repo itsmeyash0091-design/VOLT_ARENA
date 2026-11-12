@@ -17,6 +17,14 @@ Use Yahoo Finance through yfinance only as a free prototype data source. Show so
 
 **How to apply:** Preserve these boundaries in future implementation, testing, and release decisions; ask before expanding the product beyond this MVP.
 
+## CSV preview versus financial validation
+
+CSV structure preview and column mapping may run locally without an API request. Holdings still require Python validation and explicit confirmation before analysis; financial figures never move into the browser.
+
+**Why:** Repeated browser “Failed to fetch” reports blocked CSV previews even while same-origin API test requests succeeded. An unnecessary network round trip must not prevent reading a local text file.
+
+**How to apply:** Keep the parser structural, fail explicitly on malformed records, disclose skipped blank rows, and preserve session-only input. Do not reintroduce a server dependency for preview or claim this proves the user's underlying network issue was diagnosed.
+
 ## Symbol lineage and source coverage
 
 Maximum source history is not automatically comparable current-instrument history. Preserve and disclose any conservative identity boundary instead of silently treating predecessor prices as current-security observations.
