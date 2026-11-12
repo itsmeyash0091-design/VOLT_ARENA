@@ -101,3 +101,13 @@
 
 @media (max-width: 1100px) { .ca-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ca-viz { grid-template-columns: 1fr; } .ca-chart { grid-column: auto; } .ca-panel-head { flex-direction: column; align-items: stretch; } .ca-controls { align-self: flex-start; } }
 @media (max-width: 860px) { .ca { gap: 24px; } .ca-head, .ca-foot, .ca-foot-l, .ca-foot-r { flex-direction: column; align-items: stretch; } .ca-cards, .ca-kv { grid-template-columns: 1fr; } .ca-panel { padding: 24px; } .ca-table { display: block; overflow-x: auto; } }
+.ca-warn { display: flex; gap: 10px; align-items: flex-start; margin: 0 0 16px; padding: 12px 16px; border-radius: 8px; background: color-mix(in srgb, var(--err) 12%, transparent); color: var(--err); font-size: 12px; line-height: 18px; }
+.ca-warn b { color: var(--on); }
+.ca-warn svg { flex: none; margin-top: 2px; }
+.ca-confirm { margin-top: 8px; padding: 10px; border-radius: 6px; background: var(--hi); color: var(--on); display: flex; flex-direction: column; gap: 6px; }
+.ca-confirm span { display: flex; gap: 16px; }
+.ca-err-in { color: var(--err); }
+.ca-table-wrap { max-height: 280px; overflow: auto; border-radius: 8px; background: var(--c); }
+.ca-table tr.is-cur td { background: color-mix(in srgb, var(--pri) 14%, transparent); }
+.ca-speed svg { vertical-align: -2px; }
+.ca-xp .ca-link { display: inline-flex; align-items: center; gap: 4px; margin-left: 12px; }

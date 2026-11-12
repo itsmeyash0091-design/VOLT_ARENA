@@ -31,6 +31,18 @@ REPLAY_WINDOWS = [
         "startDate": "2020-01-20",
         "endDate": "2020-03-23",
     },
+    {
+        "id": "bombay-bubble",
+        "name": "1992 Bombay market stress",
+        "startDate": "1992-04-01",
+        "endDate": "1992-08-31",
+    },
+    {
+        "id": "taper-tantrum",
+        "name": "2013 taper tantrum",
+        "startDate": "2013-05-22",
+        "endDate": "2013-08-28",
+    },
 ]
 
 # No stock-to-sector mapping was documented in Stage 1. Never infer one here.
@@ -659,7 +671,9 @@ def analyze_portfolio_risk(
             "All reported financial values are calculated in Python from Yahoo source-provided adjusted closes.",
             "Replay values are rupee-valued adjusted-close series for the submitted quantities; they are not brokerage account statements or realized returns.",
             "The portfolio is treated as buy-and-hold with submitted quantities. Rebalancing, taxes, fees, and external cash flows are not modeled.",
-            "Replay windows are fixed periods: 2007-10-30 to 2009-03-09 and 2020-01-20 to 2020-03-23. They are only calculated when requested holdings have adequate aligned history.",
+            "Replay windows are fixed analysis intervals, not independently verified exact market peaks or troughs: "
+            + "; ".join(f"{window['name']}: {window['startDate']} to {window['endDate']}" for window in REPLAY_WINDOWS)
+            + ". They are only calculated when requested holdings have adequate aligned history.",
             "Risk contribution uses latest common-date value weights, sample covariance of exact common daily returns, and 252 trading days for annualization; at least 60 aligned daily returns are required.",
             "Recovery is counted in observed common trading-date steps after the within-window maximum-drawdown trough until adjusted-close portfolio value regains the prior peak.",
             "No documented stock-to-sector proxy mapping exists in this build. Missing stock history is incomplete or unavailable; ETFs are never proxied.",

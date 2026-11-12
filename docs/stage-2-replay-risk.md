@@ -8,10 +8,16 @@ No instrument-to-sector-index mapping was documented in Stage 1. The production 
 
 ## Replay windows and values
 
-The two fixed historical event windows are:
+The four fixed historical analysis windows are:
 
 - Global financial crisis: 30 October 2007–9 March 2009.
 - COVID-19 sell-off: 20 January–23 March 2020.
+- Bombay market stress: 1 April–31 August 1992.
+- Taper tantrum: 22 May–28 August 2013.
+
+These are explicit analysis intervals, not independently verified exact exchange-index peaks and troughs. Configuring a window does not imply Yahoo has prices for it. In particular, the 1992 interval may remain unavailable for every holding. No chart is invented in that case.
+
+Crash Analytics can separately replay eligible holdings after the user explicitly confirms the included and excluded instruments. This does not alter the session portfolio and is labeled **Partial holdings replay — not full portfolio** throughout. It is not a repair of missing prices or a full-portfolio completion badge. The user can restore the original full-portfolio result.
 
 The returned coverage dates and observation count describe the exact common source dates within each window. A window is `complete` only when all holdings cover both window boundaries and aligned observations without detected date gaps or proxies; it is `incomplete` when only part of the requested portfolio/window is usable and `unavailable` when no aligned portfolio path exists.
 

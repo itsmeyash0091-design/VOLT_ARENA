@@ -50,3 +50,11 @@ Use observed unadjusted Close for quantity-based dashboard valuation at a common
 **Why:** Adjusted Close includes historical corporate-action/return adjustments and is not interchangeable with the actual price at which today's held units are valued. Summing only priced holdings would misrepresent missing data as a full portfolio.
 
 **How to apply:** Display the snapshot date and source limitations. Short history can support a snapshot even when it is insufficient for simulations. Learning badges are session activity indicators, not investment skill or substitutes for Python CVaR Levels.
+
+## Partial historical replay
+
+A replay of only history-eligible holdings is a separate, explicitly confirmed analytical scope, never a replacement for the user's full portfolio. Keep exclusions visible and do not award full-portfolio activity credit for a subset-only result.
+
+**Why:** Older crash windows can lack history for current instruments; silently omitting those instruments would misrepresent the full portfolio.
+
+**How to apply:** Preserve the original session holdings and full result, disclose included and excluded instruments, and label every subset chart and export as partial.
