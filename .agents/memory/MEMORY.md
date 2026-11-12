@@ -1,3 +1,4 @@
 - [VoltArena MVP boundaries](voltarena-product-decisions.md) — Python owns all figures; portfolios stay session-only and history must retain clear source/proxy labels.
 - [Echo Fleet presentation](echo-fleet-presentation.md) — Simple educational wording, fixed-text Echo guide, and standing Stage 5 safety and test constraints.
 - [GitHub source-control access](github-source-control.md) — Native Git authentication can work even when connector API credentials are unavailable.
+- [Vercel hosting boundary](vercel-hosting-boundary.md) — Static frontend builds do not host the Python API; full functionality needs a verified backend route.

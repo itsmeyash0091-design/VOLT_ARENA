@@ -4,6 +4,8 @@
 
 **GitHub source checkout:** install Node/Python dependencies, run `pnpm run build:submission`, then `pnpm start`. Generated app files are not committed. GitHub Pages is not supported because this app requires its Python/API server. Full commands are in `SUBMISSION.md`.
 
+**Vercel frontend build:** use the repository-root `vercel.json`, which builds only `artifacts/voltarena`. See [docs/vercel-build.md](docs/vercel-build.md) for exact commands and the separate API-hosting requirement.
+
 Indian listed-stock and ETF intake, market-history inspection, historical crash replay, recovery time, volatility risk contribution, static stress scenarios, reverse stress, joint-block Monte Carlo, panic rehearsal, CVaR-par Levels, and template-built Crash Cards. It does **not** provide trading recommendations.
 
 ## Run

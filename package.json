@@ -5,6 +5,7 @@
   "scripts": {
     "start": "node scripts/start-submission.mjs",
     "build:submission": "node scripts/build-submission.mjs",
+    "build:vercel": "pnpm run typecheck:libs && pnpm --filter @workspace/voltarena run build",
     "preinstall": "node scripts/check-package-manager.mjs",
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "typecheck:libs": "tsc --build",
