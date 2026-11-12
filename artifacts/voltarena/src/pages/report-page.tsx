@@ -15,7 +15,7 @@ function errText(e: unknown): string {
 function summaryText(r: ResilienceReport): string {
   const L = r.levels, pg = r.panicGame, s = r.settings;
   return [
-    'ECHO FLEET DEBRIEF (fictional 2090 educational simulator; no advice, no trading, no prediction)',
+    'VoltArena simulation summary (for learning only; no financial advice, trading or predictions)',
     '',
     r.crashCard.text,
     '',
@@ -145,7 +145,7 @@ export function ReportPage({ holdings, inspectionKey, result, onResult, onReturn
     </section>
 
     <section className="rp-card rp-zero">
-      <div className="rp-title"><span className="rp-hero-ic rp-sm rp-sec"><Leaf size={22} /></span><div><h4 className="rp-h-sm">Zero Pressure, Zero Streak Guilt</h4><p className="rp-body rp-mute">No leaderboards, no streaks. Fictional 2090 setting: no real orders, no advice, no predictions.</p></div></div>
+      <div className="rp-title"><span className="rp-hero-ic rp-sm rp-sec"><Leaf size={22} /></span><div><h4 className="rp-h-sm">Learn at your own pace</h4><p className="rp-body rp-mute">No leaderboards or streaks. Explore the results for learning, not financial advice, trading or predictions.</p></div></div>
       <button type="button" className="rp-btn-q rp-noprint" onClick={onReturn} data-testid="button-return-portfolio">Return to Portfolio</button>
     </section>
   </div>;

@@ -1,2 +1,2 @@
 - [VoltArena MVP boundaries](voltarena-product-decisions.md) — Python owns all figures; portfolios stay session-only and history must retain clear source/proxy labels.
-- [Echo Fleet presentation](echo-fleet-presentation.md) — Fictional 2090 setting, fixed-text Echo guide, and standing Stage 5 safety and test constraints.
+- [Echo Fleet presentation](echo-fleet-presentation.md) — Simple educational wording, fixed-text Echo guide, and standing Stage 5 safety and test constraints.

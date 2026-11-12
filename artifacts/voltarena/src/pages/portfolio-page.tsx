@@ -549,7 +549,7 @@ export default function PortfolioPage() {
           </div>
           {report && report.dataNotes.length > 0 && <ul className="pf-notes">{report.dataNotes.map((n) => <li key={n}>{n}</li>)}</ul>}
         </section>
-        <footer className="pf-foot">Source: {universe.data?.source ?? 'Yahoo Finance'} (prototype, may be incomplete). Fictional 2090 learning tool; no advice, no trading.</footer>
+        <footer className="pf-foot">Source: {universe.data?.source ?? 'Yahoo Finance'}. Data may be incomplete. For learning only; no financial advice or trading.</footer>
       </main>}
     </div>
 

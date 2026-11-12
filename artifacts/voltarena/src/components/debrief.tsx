@@ -64,7 +64,7 @@ function buildBlocks(inspect: PortfolioInspectReport, risk?: PortfolioRiskAnalys
 
 function toText(blocks: Block[], holdingsCount: number, sampleLoaded: boolean, card?: string) {
   const out = [
-    'Echo Fleet debrief (fictional 2090 simulator, educational only)',
+    'Echo Fleet summary (for learning only)',
     'No forecasts, no advice, no trades. Values below were returned by the analysis service in this session.',
     `Holdings in session: ${holdingsCount}${sampleLoaded ? ' (includes one marked sample input)' : ''}`,
     '',

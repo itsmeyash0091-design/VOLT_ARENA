@@ -1,6 +1,6 @@
 # Simulator: session-only rehearsal
 
-The Simulator reuses the confirmed holdings from Portfolio. It never uploads another CSV, changes quantities, stores personal portfolios or sends orders. Echo's three guide pages are fixed text in a fictional 2090 setting.
+The Simulator reuses the confirmed holdings from Portfolio. It never uploads another CSV, changes quantities, stores personal portfolios or sends orders. Echo's three guide pages use fixed, plain-language educational text.
 
 ## Run and reveal
 

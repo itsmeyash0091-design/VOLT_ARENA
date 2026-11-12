@@ -3,9 +3,9 @@ name: Echo Fleet presentation
 description: User-approved visual identity and standing rules for Stage 5 presentation work.
 ---
 
-Use Echo Fleet as the playful, clearly fictional 2090 crash-simulator setting for VoltArena. The user specified a deep midnight background, VoltArena orange #f26a1b and blue #4c8dff, clear typography, and a subtle mission-control feel instead of the pale report-like look. Echo is a friendly guide using fixed text, not an LLM. Use simple everyday language and never suggest VoltArena predicts crashes.
+Keep Echo Fleet's deep midnight background, VoltArena orange #f26a1b and blue #4c8dff, clear typography, and subtle mission-control feel. Use simple educational language without futuristic-year or fictional-setting references. Echo is a friendly guide using fixed text, not an LLM. Never suggest VoltArena predicts crashes.
 
-**Why:** The user specified this direction for Stage 5.
+**Why:** The user specified the visual direction for Stage 5, then explicitly asked to remove the futuristic setting and keep the wording simple.
 
 **How to apply:** Keep the nine features easy to find without inventing data or changing feature behavior during visual work. Respect the scope of each subsequent Stage 5 request.
 

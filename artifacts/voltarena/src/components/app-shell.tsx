@@ -155,7 +155,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <aside className={`ef-side ${menuOpen ? 'is-open' : ''}`} aria-label="Echo Fleet stations">
       <div className="ef-brand">
         <TrendingUp size={22} />
-        <div><b>ECHO_FLEET</b><small>BY VOLTARENA // 2090</small></div>
+        <div><b>ECHO_FLEET</b><small>BY VOLTARENA</small></div>
         <button type="button" className="ef-side-close" onClick={() => setMenuOpen(false)} aria-label="Close menu" data-testid="button-close-menu"><X size={18} /></button>
       </div>
       <nav className="ef-nav">
@@ -189,7 +189,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="ef-main" ref={mainRef}>
       <header className="ef-top">
         <button type="button" className="ef-menu" onClick={() => setMenuOpen(true)} aria-label="Open stations menu" data-testid="button-open-menu"><Menu size={18} /></button>
-        <span className="ef-chip">FICTIONAL 2090</span>
+        <span className="ef-chip">LEARNING TOOL</span>
         <span className="ef-chip ef-chip-quiet"><ShieldCheck size={12} /> HOLDINGS: SESSION ONLY</span>
         <div className="ef-top-right">
           <div><b>{resultCount} / 9 tools</b><small>returned this session</small></div>
@@ -249,7 +249,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </dl>
       <footer className="shell-foot">
         <span>Echo Fleet by VoltArena</span>
-        <p>Fictional 2090 setting. Educational only: no predictions, no real trades, no advice. Holdings live in this session only.</p>
+        <p>For learning only. No predictions, real trades or financial advice. Holdings stay in this session only.</p>
       </footer>
     </div>
   </div>;

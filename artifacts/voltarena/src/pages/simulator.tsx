@@ -73,7 +73,7 @@ export function Simulator({ holdings, inspectionKey, onResult, snapshot }: { hol
     });
   };
 
-  const exportJson = () => { if (report) save(`rehearsal-${report.checkedAt}.json`, JSON.stringify({ scope: 'Simulated rehearsal of current session holdings; fictional, no trades, no advice.', stale, report }, null, 2), 'application/json'); };
+  const exportJson = () => { if (report) save(`rehearsal-${report.checkedAt}.json`, JSON.stringify({ scope: 'Simulated test of session holdings; no real trades or financial advice.', stale, report }, null, 2), 'application/json'); };
   const exportCsv = () => {
     if (!report) return;
     const c = report.simulatedChoices;
@@ -107,7 +107,7 @@ export function Simulator({ holdings, inspectionKey, onResult, snapshot }: { hol
       <div className="sm-head-l">
         <div className="sm-tags"><span className="sm-tag">SIMULATION 04</span><span className="sm-label sm-sec">BEHAVIORAL STRESS LAB</span></div>
         <h1 className="sm-h-lg">Turbulence &amp; Panic Dynamics</h1>
-        <p className="sm-body sm-mute">A fictional 2090 rehearsal. Name a loss limit, then see how it compares with {s ? s.hiddenScenarioCount : 'the'} hidden simulated scenarios from the analysis service. No real orders, no predictions.</p>
+        <p className="sm-body sm-mute">Set a loss limit and compare it with {s ? s.hiddenScenarioCount : 'the'} hidden simulated scenarios. No real trades or predictions.</p>
       </div>
       <div className="sm-head-r">
         <div className="sm-stat"><div className="sm-label sm-mute">START VALUE (ADJ. HISTORY)</div><div className="sm-h-sm sm-pri">{inr(report?.portfolioValueInr)}</div></div>
@@ -247,6 +247,6 @@ export function Simulator({ holdings, inspectionKey, onResult, snapshot }: { hol
       {report?.notes.map((n, k) => <p key={k} className="sm-note">{n}</p>)}
     </section>
 
-    <div className="sm-disc"><Info size={20} /><p className="sm-small sm-mute"><b>DISCLAIMER:</b> Fictional 2090 setting. No real orders, no real-time trading, no financial advice, no predictions. Scenarios are simulated from observed or proxy price history (Yahoo Finance prototype source, may be incomplete) and computed by the analysis service.</p></div>
+    <div className="sm-disc"><Info size={20} /><p className="sm-small sm-mute"><b>For learning only.</b> No real trades, financial advice or predictions. Scenarios use observed history or clearly labeled proxies from Yahoo Finance. The data may be incomplete.</p></div>
   </div>;
 }

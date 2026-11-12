@@ -5,14 +5,14 @@ generated = []
 id = "hidE-OQy3MKVHfJqDUMpo"
 uri = "file://generated-artifacts/VoltArena-MVP-submission.zip"
 type = "unspecified"
-title = "VoltArena MVP — College Submission ZIP"
-description = "3.5 MB source-and-prebuilt submission with setup guide, demo CSV, dated observed market snapshots, local fonts and verification notes. Start with START_HERE.txt inside."
+title = "Updated VoltArena Submission ZIP"
+description = "Updated with simpler wording and no futuristic-year references. Includes the app, demo CSV, dated observed market snapshots and setup guide."
 logical_id = "e00b6e32-6d22-4620-b43b-111f28efdf7c"
-content_hash = "sha256:eef623419f579f6c2ff744ba784ea949a1363384b2c9d9a89e5069823b2ea29b"
-size = 3500399
-mtime_ms = 1794465718887
-storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:e56b71d6-2159-4ecf-ab09-94b1ccfc7d2f/e00b6e32-6d22-4620-b43b-111f28efdf7c/1869b326-7bcf-485e-a29b-7bdaded9aac8"
-storage_version_token = "1794465762195604"
+content_hash = "sha256:139e80beeaa79ecbd77c776ec78b386eb724b95424a02832cca27bc5cac6fc3d"
+size = 3500213
+mtime_ms = 1794466395011
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:e56b71d6-2159-4ecf-ab09-94b1ccfc7d2f/e00b6e32-6d22-4620-b43b-111f28efdf7c/fe93d3ac-fab4-4250-81c5-33e4bf1677d3"
+storage_version_token = "1794466432758603"
 content_type = "application/octet-stream"
 
 [[outputs]]
