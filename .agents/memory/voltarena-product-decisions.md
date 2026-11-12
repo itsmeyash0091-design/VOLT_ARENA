@@ -23,7 +23,7 @@ The college submission needs an included example CSV and a reliable demonstratio
 
 **Why:** The user wants judges to import the project and test it with an included CSV, without connection failures during the demonstration.
 
-**How to apply:** Keep snapshot manifests/checksums, CSV and release smoke checks aligned. Ship a single-origin UI/API launcher and explicit runtime/install instructions. Never claim zero errors on unknown operating systems or that bundled prices are live.
+**How to apply:** Keep snapshot manifests/checksums, CSV and release smoke checks aligned. Both the repository and ZIP must remain portable; do not reintroduce Linux-only native build exclusions. GitHub source checkouts require a build because generated output is ignored. Ship a single-origin UI/API launcher and explicit runtime/install instructions. Never claim zero errors on unknown operating systems or that bundled prices are live.
 
 ## CSV preview versus financial validation
 

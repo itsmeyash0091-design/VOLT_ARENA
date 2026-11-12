@@ -28,6 +28,23 @@ The ZIP contains prebuilt app files. To rebuild source changes, run `node script
 
 The portable ZIP restores Windows/Mac native dependency choices and uses a Node-based install guard instead of a Unix-only shell command. It has been run on Linux; native Windows/macOS execution is still unverified.
 
+## After cloning or downloading source from GitHub
+
+GitHub is source hosting, not a running Python/API server. Do **not** use GitHub Pages for this app: static hosting cannot run the calculations or API. Do not open `index.html` directly.
+
+The repository intentionally excludes generated `dist` folders. Unlike the prebuilt submission ZIP, a fresh source checkout needs a build:
+
+```
+pnpm install --frozen-lockfile
+python3 -m pip install -r requirements.txt
+pnpm run build:submission
+pnpm start
+```
+
+Run these in the project root with Node.js 24+, pnpm 10.26.1 and Python 3.13+. On Windows use `python` instead of `python3`. Open the printed address and keep the server terminal running. The single server provides both the UI and `/api` on the same origin, avoiding separate API-address configuration. First-time dependency installation needs internet.
+
+The CSV is at `artifacts/voltarena/src/assets/demo-portfolio.csv`, and can also be downloaded from Portfolio. CSV preview stays local; Python validation and analysis require the running server. The three bundled example stocks work without live Yahoo access after setup.
+
 ## Import on Replit
 
 Use Replit's ZIP importer at **https://replit.com/import**, select ZIP and upload the submission archive (under 200 MB). Install the locked Node/Python dependencies using the environment's package setup, then run `node scripts/start-submission.mjs`. The importer can assist with runtime setup; imported machines still need Python dependencies. Use the app's running preview, not a source file. The normal project has separate managed UI/API workflows; the portable submission intentionally serves both from one process.

@@ -36,7 +36,7 @@ Single-origin smoke results:
 
 One browser pass uploaded the actual included CSV (not just the sample shortcut). It verified 3 ready rows, no portfolio additions before confirmation, successful Python inspection, and the same holdings across every section without another upload.
 
-- 2020 replay table and timeline scrubbing worked. Automatic advancement after pressing Play at the terminal point was not conclusively observed in that pass; the code restarts at the beginning and short playback can finish between observations. Scrubbing was verified directly.
+- 2020 replay table and timeline scrubbing worked. The final timed browser check also confirmed automatic playback: the scrubber advanced from 1 to 10 after 800 ms, both from Reset and when restarting at the terminal point.
 - All four Risk Lab tabs returned results; incomplete coverage and unavailable 1992 history were explicitly disclosed.
 - Simulator returned 500 outcomes for a ₹5,000 limit; simulated Sell 25% selection worked without changing the original holdings or Levels.
 - Reports displayed the same session results and the clipboard summary succeeded.
@@ -44,6 +44,16 @@ One browser pass uploaded the actual included CSV (not just the sample shortcut)
 - The operating-system PDF save dialog was not automated.
 
 No result here certifies untested operating systems or every possible user CSV/instrument.
+
+## Final GitHub source check
+
+A new source-only copy was assembled from Git-visible files, with no `node_modules` or generated `dist` folders. Its frozen-lockfile install and `scripts/build-submission.mjs` both passed on Linux. Starting before the build gave explicit recovery commands instead of a broken preview.
+
+After building, `scripts/start-submission.mjs` served both UI and API from one origin, and the full smoke script passed: valuation, CSV/input validation, three historical replay windows, static/reverse stress, 1,000 Monte Carlo paths, 500 hidden outcomes, certified Levels and Crash Card. The 1992 window and incomplete source coverage stayed clearly labeled. All 85 Python tests, 15 UI/helper tests and workspace type checks also passed again.
+
+The repository now permits platform-native build dependencies, not just the exported ZIP. Security overrides and the one-day package-release-age policy remain enabled. Native Windows/macOS runs and a new Python installation remain unverified. This was a local source-checkout simulation, not confirmation that code has been pushed to a GitHub repository.
+
+The final fresh browser pass uploaded the actual demo CSV while a temporary fetch wrapper deliberately rejected the old `/api/portfolio/csv-preview` endpoint. The preview still showed all three ready rows and made **zero** calls to that endpoint. No holdings were added before confirmation. The same holdings then worked through Crash Analytics, all four Risk Lab tabs, Simulator and Reports. Clipboard sharing worked, the simplified footer was visible, and the 402px phone document had no horizontal overflow. Navigation scrolls horizontally on a phone; PDF/OS print saving was intentionally not automated.
 
 ## Known limits
 

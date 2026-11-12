@@ -5,14 +5,14 @@ generated = []
 id = "hidE-OQy3MKVHfJqDUMpo"
 uri = "file://generated-artifacts/VoltArena-MVP-submission.zip"
 type = "unspecified"
-title = "Updated VoltArena Submission ZIP"
-description = "Updated with simpler wording and no futuristic-year references. Includes the app, demo CSV, dated observed market snapshots and setup guide."
+title = "Final Checked VoltArena Submission"
+description = "Verified actual CSV-to-report browser flow, 85 Python tests, 15 UI/helper tests and clean source-only install/build/API checks. Includes updated GitHub startup instructions and demo CSV."
 logical_id = "e00b6e32-6d22-4620-b43b-111f28efdf7c"
-content_hash = "sha256:139e80beeaa79ecbd77c776ec78b386eb724b95424a02832cca27bc5cac6fc3d"
-size = 3500213
-mtime_ms = 1794466395011
-storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:e56b71d6-2159-4ecf-ab09-94b1ccfc7d2f/e00b6e32-6d22-4620-b43b-111f28efdf7c/fe93d3ac-fab4-4250-81c5-33e4bf1677d3"
-storage_version_token = "1794466432758603"
+content_hash = "sha256:89b481f8602d4c767b72755b4fcecc87ced4dac0c741d8895ebc7444a0636ebb"
+size = 3501507
+mtime_ms = 1794467472747
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:e56b71d6-2159-4ecf-ab09-94b1ccfc7d2f/e00b6e32-6d22-4620-b43b-111f28efdf7c/8f7be653-ec67-42ac-a097-fe9a37a789d8"
+storage_version_token = "1794467513028681"
 content_type = "application/octet-stream"
 
 [[outputs]]

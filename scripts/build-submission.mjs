@@ -1,4 +1,7 @@
 import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+process.chdir(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'));
 const pnpm = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
 for (const args of [
   ['run', 'typecheck:libs'],

@@ -2,6 +2,8 @@
 
 **Judges: read [SUBMISSION.md](SUBMISSION.md) first.** The release ZIP includes prebuilt app files, an example CSV, locked dependencies, dated real-market snapshots and startup/check scripts. After setup, run `node scripts/start-submission.mjs`; do not open HTML directly.
 
+**GitHub source checkout:** install Node/Python dependencies, run `pnpm run build:submission`, then `pnpm start`. Generated app files are not committed. GitHub Pages is not supported because this app requires its Python/API server. Full commands are in `SUBMISSION.md`.
+
 Indian listed-stock and ETF intake, market-history inspection, historical crash replay, recovery time, volatility risk contribution, static stress scenarios, reverse stress, joint-block Monte Carlo, panic rehearsal, CVaR-par Levels, and template-built Crash Cards. It does **not** provide trading recommendations.
 
 ## Run
