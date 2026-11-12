@@ -17,6 +17,14 @@ Use Yahoo Finance through yfinance only as a free prototype data source. Show so
 
 **How to apply:** Preserve these boundaries in future implementation, testing, and release decisions; ask before expanding the product beyond this MVP.
 
+## College demo portability
+
+The college submission needs an included example CSV and a reliable demonstration without live Yahoo access. Bundle dated source observations for the example instruments, never synthetic market prices, and show their frozen provenance. Custom instruments can still require the live source.
+
+**Why:** The user wants judges to import the project and test it with an included CSV, without connection failures during the demonstration.
+
+**How to apply:** Keep snapshot manifests/checksums, CSV and release smoke checks aligned. Ship a single-origin UI/API launcher and explicit runtime/install instructions. Never claim zero errors on unknown operating systems or that bundled prices are live.
+
 ## CSV preview versus financial validation
 
 CSV structure preview and column mapping may run locally without an API request. Holdings still require Python validation and explicit confirmation before analysis; financial figures never move into the browser.

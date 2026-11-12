@@ -1,0 +1,47 @@
+{
+  "source": "Yahoo Finance via yfinance; bundled historical demo snapshot, not live",
+  "capturedAt": "2026-11-12T06:24:04.994639+00:00",
+  "independentlyVerified": false,
+  "limitations": "Prototype source; no independent full-series or exchange-calendar verification. No missing prices filled. Adjustments are provider supplied. Educational demonstration only.",
+  "instruments": {
+    "RELIANCE.NS": {
+      "file": "RELIANCE.NS.json.gz",
+      "sha256": "149aabbc51fe429fbc7943eb7856a9307d90fa0b6337c5f7e2fc5fa036208a96",
+      "firstDate": "1996-01-01",
+      "lastDate": "2026-11-12",
+      "sourceRowCount": 7753,
+      "fields": [
+        "Close",
+        "Adj Close",
+        "Stock Splits",
+        "Dividends"
+      ]
+    },
+    "TCS.NS": {
+      "file": "TCS.NS.json.gz",
+      "sha256": "fb10acfd3ac33ad4aefe41fbb54850eb0bbf4757be5b83a709530301aa97227d",
+      "firstDate": "2002-08-12",
+      "lastDate": "2026-11-12",
+      "sourceRowCount": 6028,
+      "fields": [
+        "Close",
+        "Adj Close",
+        "Stock Splits",
+        "Dividends"
+      ]
+    },
+    "INFY.NS": {
+      "file": "INFY.NS.json.gz",
+      "sha256": "67249bdd09ccfd725fd199ffb77c88e6ab590b60bfa563ebbf3304577d6b06da",
+      "firstDate": "1996-01-01",
+      "lastDate": "2026-11-12",
+      "sourceRowCount": 7753,
+      "fields": [
+        "Close",
+        "Adj Close",
+        "Stock Splits",
+        "Dividends"
+      ]
+    }
+  }
+}

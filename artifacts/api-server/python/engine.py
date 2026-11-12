@@ -14,11 +14,12 @@ from typing import Any, Callable
 
 import pandas as pd
 import yfinance as yf
+from demo_market import snapshot_note
 
-SOURCE = "Yahoo Finance via yfinance"
+SOURCE = "Yahoo Finance via yfinance (prototype; bundled dated snapshots for demo symbols)"
 SOURCE_NOTE = (
     "Free prototype data only; Yahoo Finance history is not official, "
-    "real-time, guaranteed complete, or independently audited."
+    "real-time, guaranteed complete, or independently audited. " + snapshot_note()
 )
 MAX_HOLDINGS = 50
 MAX_CSV_CHARS = 80_000
@@ -243,6 +244,10 @@ def validate_holdings(holdings: Any) -> dict[str, Any]:
 
 
 def fetch_history(yahoo_symbol: str) -> pd.DataFrame:
+    from demo_market import load_demo_history
+    snapshot = load_demo_history(yahoo_symbol)
+    if snapshot is not None:
+        return snapshot
     return yf.Ticker(yahoo_symbol).history(
         period="max",
         interval="1d",

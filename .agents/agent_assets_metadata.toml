@@ -1,0 +1,30 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "hidE-OQy3MKVHfJqDUMpo"
+uri = "file://generated-artifacts/VoltArena-MVP-submission.zip"
+type = "unspecified"
+title = "VoltArena MVP — College Submission ZIP"
+description = "3.5 MB source-and-prebuilt submission with setup guide, demo CSV, dated observed market snapshots, local fonts and verification notes. Start with START_HERE.txt inside."
+logical_id = "e00b6e32-6d22-4620-b43b-111f28efdf7c"
+content_hash = "sha256:eef623419f579f6c2ff744ba784ea949a1363384b2c9d9a89e5069823b2ea29b"
+size = 3500399
+mtime_ms = 1794465718887
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:e56b71d6-2159-4ecf-ab09-94b1ccfc7d2f/e00b6e32-6d22-4620-b43b-111f28efdf7c/1869b326-7bcf-485e-a29b-7bdaded9aac8"
+storage_version_token = "1794465762195604"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "hbI344-XXiVRQSIQKG4ZS"
+uri = "file://artifacts/voltarena/src/assets/demo-portfolio.csv"
+type = "table"
+title = "Demo Portfolio CSV"
+description = "Upload this example CSV on Portfolio: RELIANCE, TCS and INFY. Example quantities only; the app includes dated real-price snapshots for an offline demonstration after setup."
+logical_id = "f123a724-bfda-4e9b-b269-85ec35f8fd46"
+content_hash = "sha256:7b737be16f1ddcd27b4817847734cda2843e7085d8acddc96640c0835214dc5f"
+size = 95
+mtime_ms = 1794464627620
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:e56b71d6-2159-4ecf-ab09-94b1ccfc7d2f/f123a724-bfda-4e9b-b269-85ec35f8fd46/919d5225-8b95-4af1-80a2-7ff3ba9f46dc"
+storage_version_token = "1794465763465686"
+content_type = "text/csv"

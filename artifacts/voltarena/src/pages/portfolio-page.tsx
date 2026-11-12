@@ -17,6 +17,7 @@ import { RiskLab } from './risk-lab';
 import { Simulator } from './simulator';
 import { ReportPage } from './report-page';
 import { previewCsvLocally } from './csv-preview';
+import demoCsv from '../assets/demo-portfolio.csv?raw';
 import './portfolio-page.css';
 
 type StationId = 'portfolio' | 'crash' | 'risklab' | 'simulator' | 'report';
@@ -127,7 +128,6 @@ export default function PortfolioPage() {
   const go = (id: StationId) => { setStation(id); if (window.location.hash !== `#${id}`) window.history.pushState(null, '', `#${id}`); };
 
   const configured = universe.data?.instruments ?? [];
-  const sampleInstrument = configured.find((i) => i.ticker === 'VEDL' && i.exchange === 'NSE' && i.instrumentType === 'stock');
   const sampleLoaded = holdings.some((h) => h.rowId === sampleRowId);
 
   const invalidate = () => { inputRevision.current += 1; levelReq.current += 1; setLevelError(''); setMilestones(undefined); setResilience(undefined); setReport(undefined); setReportError(''); setShowConfirm(false); setIssues([]); setValidationError(''); };
@@ -255,11 +255,13 @@ export default function PortfolioPage() {
     setSampleError('');
     if (inspect.isPending || csvReading || csvPreview) { setSampleError('Finish the current inspection or CSV review first.'); return; }
     if (holdings.length) { setSampleError('Clear current holdings first; existing rows are never replaced.'); return; }
-    if (!sampleInstrument) { setSampleError('VEDL is not in the configured list right now.'); return; }
-    const rowId = crypto.randomUUID();
-    setSampleRowId(rowId);
-    setHoldings([{ rowId, ticker: sampleInstrument.ticker, exchange: sampleInstrument.exchange, instrumentType: sampleInstrument.instrumentType, quantity: '1' }]);
-    invalidate();
+    setCsvName('demo-portfolio.csv');
+    requestCsvPreview(demoCsv);
+  };
+  const downloadDemoCsv = () => {
+    const url = URL.createObjectURL(new Blob([demoCsv], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a'); link.href = url; link.download = 'demo-portfolio.csv'; link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   const apiHoldings = holdings.map((h) => ({ ticker: h.ticker, exchange: h.exchange, instrumentType: h.instrumentType, quantity: String(h.quantity) }));
@@ -454,14 +456,17 @@ export default function PortfolioPage() {
                 <input ref={fileRef} type="file" accept=".csv,text/csv" onChange={onFile} hidden data-testid="input-csv-file" />
                 {csvNotice && <p className="pf-ok" role="status">{csvNotice}</p>}
                 {csvError && !csvPreview && <div className="pf-csv-error"><p className="pf-err" role="alert">{csvError}</p></div>}
+                <button type="button" className="pf-link" onClick={downloadDemoCsv} data-testid="button-download-demo-csv">Download demo CSV</button>
+                <p className="pf-hint">College demo: RELIANCE, TCS and INFY. Example quantities, not recommendations. Dated, real historical snapshots are bundled for these symbols; no live Yahoo connection is needed for their analysis.</p>
               </div>}
 
               {tab === 'sample' && <div className="pf-samples">
-                <button type="button" className="pf-sample" onClick={loadSample} disabled={!sampleInstrument || sampleLoaded} data-testid="button-sample-vedl">
-                  <div className="pf-h-sm">VEDL sample</div>
-                  <div className="pf-body-sm">One NSE share, clearly marked as sample input</div>
-                  <div className="pf-label pri pf-mt">{sampleLoaded ? 'Loaded in this session' : universe.isLoading ? 'Checking configured list' : sampleInstrument ? 'Est. value: not calculated' : 'Unavailable in configured list'}</div>
+                <button type="button" className="pf-sample" onClick={loadSample} data-testid="button-demo-portfolio">
+                  <div className="pf-h-sm">College demo portfolio</div>
+                  <div className="pf-body-sm">Preview a built-in CSV: RELIANCE, TCS and INFY. Review and confirm before analysis.</div>
+                  <div className="pf-label pri pf-mt">Dated historical snapshots · not live prices · not your holdings</div>
                 </button>
+                <button type="button" className="pf-link" onClick={downloadDemoCsv}>Download the same demo CSV</button>
                 {sampleError && <p className="pf-err" role="alert">{sampleError}</p>}
               </div>}
             </section>

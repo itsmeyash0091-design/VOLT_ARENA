@@ -1,0 +1,4 @@
+ticker,quantity,exchange,instrumentType
+RELIANCE,5,NSE,stock
+TCS,3,NSE,stock
+INFY,10,NSE,stock

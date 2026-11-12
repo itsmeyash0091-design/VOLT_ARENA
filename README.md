@@ -1,4 +1,6 @@
-# VoltArena — Stages 1–4
+# VoltArena — College MVP submission
+
+**Judges: read [SUBMISSION.md](SUBMISSION.md) first.** The release ZIP includes prebuilt app files, an example CSV, locked dependencies, dated real-market snapshots and startup/check scripts. After setup, run `node scripts/start-submission.mjs`; do not open HTML directly.
 
 Indian listed-stock and ETF intake, market-history inspection, historical crash replay, recovery time, volatility risk contribution, static stress scenarios, reverse stress, joint-block Monte Carlo, panic rehearsal, CVaR-par Levels, and template-built Crash Cards. It does **not** provide trading recommendations.
 
@@ -17,7 +19,7 @@ Enter exchange tickers manually or upload a header-based CSV. Map ticker and qua
 
 Up to 50 holdings and an 80 KB CSV are supported. Quantities must be positive and finite; duplicate ticker/exchange pairs are rejected. BSE symbols should use numeric exchange codes. Instrument type is user-selected, not security-master verified.
 
-Holdings exist only in browser state and transient API/Python memory. Refreshing clears browser holdings. There is no portfolio database, login, broker connection, or browser storage. CSV preview and row validation send input to the server before market-history confirmation; only the final confirmed request fetches history. Standard HTTP logs do not log portfolio request bodies. Yahoo receives requested ticker symbols, not quantities.
+Holdings exist only in browser state and transient API/Python memory. Refreshing clears browser holdings. There is no portfolio database, login, broker connection, or browser storage. CSV structure preview is local and needs no network request. Python validates rows before confirmation; only the final confirmed request reads market history. Standard HTTP logs do not log portfolio request bodies. Yahoo receives requested ticker symbols, not quantities. Demo symbols use the bundled, explicitly dated real-price snapshots described in `SUBMISSION.md`.
 
 ## Source and limitations
 
@@ -43,4 +45,4 @@ The tests use explicitly artificial fixtures, never presented as real market dat
 
 ## Deliberately not implemented
 
-No paid APIs, broker connections, LLM scenarios, buy/sell advice, authentication, or persistent personal-portfolio storage is included. Final release packaging and full end-to-end release review remain separate from these feature stages.
+No paid APIs, broker connections, LLM scenarios, buy/sell advice, authentication, or persistent personal-portfolio storage is included. See `SUBMISSION.md` for release setup, demo provenance and the judge walkthrough.
