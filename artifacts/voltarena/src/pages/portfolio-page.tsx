@@ -89,7 +89,9 @@ export default function PortfolioPage() {
   const [manualError, setManualError] = useState('');
   const [csvPreview, setCsvPreview] = useState<CsvPreviewReport>();
   const [csvName, setCsvName] = useState('');
+  const [csvText, setCsvText] = useState('');
   const [csvError, setCsvError] = useState('');
+  const [csvRetryable, setCsvRetryable] = useState(false);
   const [csvNotice, setCsvNotice] = useState('');
   const [columnMap, setColumnMap] = useState<Record<FieldKey, string>>(emptyMap);
   const [dragging, setDragging] = useState(false);
@@ -208,30 +210,46 @@ export default function PortfolioPage() {
   const overLimit = holdings.length + csvRows.length > 50;
   const canAddCsv = countMatches && readyRows.length > 0 && readyRows.length === csvRows.length && !overLimit && !inspect.isPending;
 
+  const requestCsvPreview = (text: string) => {
+    setCsvError('');
+    setCsvRetryable(false);
+    preview.mutate({ data: { csvText: text } }, {
+      onSuccess: (parsed) => {
+        if (!parsed.columns.length || !parsed.rows.length) { setCsvError('This file has no readable rows. Use a CSV with a header row and at least one holding.'); return; }
+        setCsvPreview(parsed);
+        const s = parsed.suggestedMapping;
+        setColumnMap({ ticker: s.tickerColumn ?? '', exchange: s.exchangeColumn ?? '', instrumentType: s.instrumentTypeColumn ?? '', quantity: s.quantityColumn ?? '' });
+        if (!Number.isFinite(parsed.rowCount) || parsed.rowCount !== parsed.rows.length) {
+          setCsvError(`The preview returned ${parsed.rows.length} rows but reported ${String(parsed.rowCount)}. Nothing was added.`);
+        }
+      },
+      onError: (error) => {
+        setCsvPreview(undefined);
+        const message = errorMessage(error);
+        const networkFailure = /failed to fetch|networkerror|load failed/i.test(message);
+        setCsvRetryable(networkFailure);
+        setCsvError(networkFailure
+          ? 'Could not reach the CSV preview service. Your file is still held in this tab only. Retry when the connection is available. No rows were added.'
+          : `We could not preview this CSV. ${message} No rows were added.`);
+      },
+    });
+  };
+
   const readFile = (file: File) => {
-    if (file.size > 80_000) { setCsvError('This CSV is over the 80 KB limit. No rows were added.'); return; }
+    if (file.size > 80_000) { setCsvRetryable(false); setCsvText(''); setCsvError('This CSV is over the 80 KB limit. No rows were added.'); return; }
     setCsvName(file.name); setCsvError(''); setCsvNotice(''); setCsvPreview(undefined);
     const reader = new FileReader();
     reader.onload = () => {
-      preview.mutate({ data: { csvText: String(reader.result ?? '') } }, {
-        onSuccess: (parsed) => {
-          if (!parsed.columns.length || !parsed.rows.length) { setCsvError('This file has no readable rows. Use a CSV with a header row and at least one holding.'); return; }
-          setCsvPreview(parsed);
-          if (!Number.isFinite(parsed.rowCount) || parsed.rowCount !== parsed.rows.length) {
-            setCsvError(`The preview returned ${parsed.rows.length} rows but reported ${String(parsed.rowCount)}. Nothing was added.`);
-          }
-          const s = parsed.suggestedMapping;
-          setColumnMap({ ticker: s.tickerColumn ?? '', exchange: s.exchangeColumn ?? '', instrumentType: s.instrumentTypeColumn ?? '', quantity: s.quantityColumn ?? '' });
-        },
-        onError: (error) => { setCsvPreview(undefined); setCsvError(`We could not preview this CSV. ${errorMessage(error)} No rows were added.`); },
-      });
+      const text = String(reader.result ?? '');
+      setCsvText(text);
+      requestCsvPreview(text);
     };
-    reader.onerror = () => setCsvError('We could not read this file. No rows were added.');
+    reader.onerror = () => { setCsvText(''); setCsvRetryable(false); setCsvError('We could not read this file. No rows were added.'); };
     reader.readAsText(file);
   };
   const onFile = (e: ChangeEvent<HTMLInputElement>) => { const f = e.target.files?.[0]; if (f) readFile(f); e.target.value = ''; };
   const onDrop = (e: DragEvent<HTMLDivElement>) => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files?.[0]; if (f) readFile(f); };
-  const closeCsv = () => { setCsvPreview(undefined); setCsvName(''); preview.reset(); };
+  const closeCsv = () => { setCsvPreview(undefined); setCsvName(''); setCsvText(''); setCsvRetryable(false); preview.reset(); };
   const addCsvRows = () => {
     if (!canAddCsv) return;
     setHoldings((cur) => [...cur, ...readyRows.map((r) => ({ rowId: crypto.randomUUID(), ticker: r.ticker, exchange: r.exchange as Exchange, instrumentType: r.instrumentType as InstrumentType, quantity: r.quantity }))]);
@@ -423,7 +441,7 @@ export default function PortfolioPage() {
                 </div>
                 <input ref={fileRef} type="file" accept=".csv,text/csv" onChange={onFile} hidden data-testid="input-csv-file" />
                 {csvNotice && <p className="pf-ok" role="status">{csvNotice}</p>}
-                {csvError && !csvPreview && <p className="pf-err" role="alert">{csvError}</p>}
+                {csvError && !csvPreview && <div className="pf-csv-error"><p className="pf-err" role="alert">{csvError}</p>{csvRetryable && csvText && <button type="button" className="pf-btn-quiet" onClick={() => requestCsvPreview(csvText)} disabled={preview.isPending} data-testid="button-retry-csv-preview">Retry preview</button>}</div>}
               </div>}
 
               {tab === 'sample' && <div className="pf-samples">
