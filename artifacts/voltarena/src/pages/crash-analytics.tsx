@@ -80,7 +80,7 @@ export function CrashAnalytics({ holdings, inspectionKey, onReturn, onCompleted 
     const id = ++reqId.current;
     setError(''); setPlaying(false); setScope('full'); setConfirmSubset(false); subsetReq.current++; setSubset(undefined); setSubsetError('');
     analyze.mutate({ data: { holdings } }, {
-      onSuccess: (r) => { if (id === reqId.current) { setReport(r); setIdx(0); if (r.replayWindows.some((w) => w.status !== 'unavailable')) onCompleted?.(); } },
+      onSuccess: (r) => { if (id === reqId.current) { setReport(r); setIdx(0); setPlaying((r.replayWindows.find((w) => w.id === meta.apiId)?.path.length ?? 0) > 1); if (r.replayWindows.some((w) => w.status !== 'unavailable')) onCompleted?.(); } },
       onError: (e) => { if (id === reqId.current) setError(errorMessage(e)); },
     });
   };
@@ -93,7 +93,7 @@ export function CrashAnalytics({ holdings, inspectionKey, onReturn, onCompleted 
     const id = ++subsetReq.current;
     setSubsetError(''); setConfirmSubset(false);
     subsetRun.mutate({ data: { holdings: eligibleHoldings } }, {
-      onSuccess: (r) => { if (id === subsetReq.current) { setSubset({ windowId, included, excluded, report: r }); setScope('subset'); setIdx(0); setPlaying(false); } },
+      onSuccess: (r) => { if (id === subsetReq.current) { setSubset({ windowId, included, excluded, report: r }); setScope('subset'); setIdx(0); setPlaying((r.replayWindows.find((w) => w.id === windowId)?.path.length ?? 0) > 1); } },
       onError: (e) => { if (id === subsetReq.current) setSubsetError(errorMessage(e)); },
     });
   };
@@ -142,7 +142,7 @@ export function CrashAnalytics({ holdings, inspectionKey, onReturn, onCompleted 
         <p className="ca-mute">Replay your current holdings through past market windows. Hypothetical: you may not have owned them then.</p>
       </div>
       <div className="ca-xp"><span><Zap size={20} /></span><div><div className="ca-label ca-mute">SESSION REPLAY STATUS</div><div className="ca-h-sm ca-pri" data-testid="text-replay-status">{analyze.isPending ? 'RUNNING' : report ? `${fullAvailable} / ${report.replayWindows.length} WITH PATHS` : locked ? 'AWAITING INSPECTION' : 'NOT RUN'}</div></div>
-        {!locked && <button type="button" className="ca-link" onClick={run} disabled={analyze.isPending} data-testid="button-analyze-all">{report ? <><RefreshCw size={12} /> Refresh</> : 'Analyse all windows'}</button>}</div>
+        {!locked && <button type="button" className="ca-link" onClick={run} disabled={analyze.isPending} data-testid="button-analyze-all">{report ? <><RefreshCw size={12} /> Refresh replay</> : 'Analyse & replay'}</button>}</div>
     </div>
 
     <section className="ca-block">
@@ -188,10 +188,11 @@ export function CrashAnalytics({ holdings, inspectionKey, onReturn, onCompleted 
 
       {subsetActive && <div className="ca-warn" role="alert" data-testid="banner-partial"><AlertTriangle size={16} /><div><b>Partial holdings replay — not full portfolio.</b> Included: {subset.included.join(', ')}. Excluded: {subset.excluded.join(', ')}. Your session holdings are unchanged. <button type="button" className="ca-link" onClick={() => { setScope('full'); setIdx(0); setPlaying(false); }} data-testid="button-restore-full">Show full portfolio result</button></div></div>}
       {!subsetActive && fullWin && fullWin.status !== 'complete' && blockers.length > 0 && <div className="ca-warn" data-testid="panel-blockers"><AlertTriangle size={16} /><div>
-        <b>Full portfolio replay {fullWin.status} for this window.</b> Holdings without sufficient history here: {blockers.map((b) => `${b.ticker} (${b.note})`).join('; ')}.
+        <b>Your Portfolio holdings are loaded. This is a history limitation, not a missing CSV.</b>
+        <p>Full portfolio replay is {fullWin.status} for this window. Missing sufficient history: {blockers.map((b) => b.ticker).join(', ')}. The original holdings will not be removed. Open Data Details for source notes.</p>
         {canSubset ? (confirmSubset ? <div className="ca-confirm">Run a SEPARATE replay using only {eligibleHoldings.map(holdingLabel).join(', ')}? It excludes {excludedHoldings.map(holdingLabel).join(', ')} and is not your full portfolio.
-          <span><button type="button" className="ca-link" onClick={runSubset} disabled={subsetRun.isPending} data-testid="button-confirm-subset">{subsetRun.isPending ? 'Running…' : 'Confirm partial replay'}</button> <button type="button" className="ca-link" onClick={() => setConfirmSubset(false)}>Cancel</button></span></div>
-          : <> <button type="button" className="ca-link" onClick={() => setConfirmSubset(true)} data-testid="button-offer-subset">Replay eligible holdings only…</button></>)
+          <span><button type="button" className="ca-cta" onClick={runSubset} disabled={subsetRun.isPending} data-testid="button-confirm-subset">{subsetRun.isPending ? 'Running…' : 'Confirm & start partial replay'}</button> <button type="button" className="ca-link" onClick={() => setConfirmSubset(false)}>Cancel</button></span></div>
+          : <div><button type="button" className="ca-cta" onClick={() => setConfirmSubset(true)} disabled={subsetRun.isPending} data-testid="button-offer-subset">{subsetRun.isPending ? 'Loading partial replay…' : 'Choose holdings with available history'}</button></div>)
           : ' No eligible subset is available for this window.'}
         {subset && subset.windowId === fullWin.id && <> <button type="button" className="ca-link" onClick={() => setScope('subset')}>View last partial replay</button></>}
         {subsetError && <span className="ca-err-in"> {subsetError} <button type="button" className="ca-link" onClick={runSubset}>Try again</button></span>}

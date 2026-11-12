@@ -1,3 +1,11 @@
+# Shared portfolio across pages
+
+Portfolio is the only input location. Crash Analytics, Risk Lab, Simulator and Reports receive the same parent-owned session holdings, not separate uploads. Each analysis page displays the holding count, imported CSV filenames where applicable, inspection state and expandable holdings. These are in-memory source labels, not persisted files.
+
+Use the in-app navigation to switch sections. Reloading or closing the tab starts a new session and clears holdings by design. Editing holdings clears old financial results and requires confirmation again.
+
+Missing old history is not a missing CSV. Crash Analytics names the blocking instruments and offers a separately confirmed partial replay where eligible holdings exist. A successful explicit replay request starts playback; no holdings are silently excluded.
+
 # Portfolio dashboard
 
 ## Valuation

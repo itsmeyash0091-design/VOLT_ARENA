@@ -5,6 +5,12 @@ description: Product scope, data provenance, calculation ownership, and safety b
 
 VoltArena's MVP is for Indian listed stocks and ETFs. Portfolio input is CSV or manual entry and personal portfolio data is session-only. Python is the single source of truth for all financial calculations and displayed figures; the TypeScript app calls the Python engine and must not duplicate calculations.
 
+Users upload CSV holdings once on Portfolio. Every other page and section must reuse the same session holdings, without requiring another upload.
+
+**Why:** The user repeated that Portfolio input must be shared across all sections.
+
+**How to apply:** Keep one session portfolio and make its source and confirmation state visible on each analysis page. Navigation must not clear it; the session-only restriction still rules out persistent storage.
+
 Use Yahoo Finance through yfinance only as a free prototype data source. Show source, as-of date, and actual history coverage. Label sector-index proxies for stocks and insufficient history; never present missing or modeled prices as observed. Keep calculations deterministic. No paid APIs, broker connections, trading, authentication, persistent personal-portfolio storage, LLM scenarios, or buy/sell advice belong in the MVP.
 
 **Why:** The user explicitly approved these project-specific constraints for the VoltArena MVP.

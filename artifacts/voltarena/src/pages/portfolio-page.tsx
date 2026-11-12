@@ -22,7 +22,7 @@ import './portfolio-page.css';
 type StationId = 'portfolio' | 'crash' | 'risklab' | 'simulator' | 'report';
 type Tab = 'manual' | 'csv' | 'sample';
 type FieldKey = 'ticker' | 'exchange' | 'instrumentType' | 'quantity';
-type Holding = { rowId: string; ticker: string; exchange: Exchange; instrumentType: InstrumentType; quantity: string; purchasePrice?: string };
+type Holding = { rowId: string; ticker: string; exchange: Exchange; instrumentType: InstrumentType; quantity: string; purchasePrice?: string; sourceName?: string };
 
 const stations: { id: StationId; label: string; icon: typeof LayoutDashboard }[] = [
   { id: 'portfolio', label: 'Portfolio', icon: LayoutDashboard },
@@ -259,7 +259,7 @@ export default function PortfolioPage() {
   const closeCsv = () => { setCsvPreview(undefined); setCsvName(''); setCsvText(''); setCsvRetryable(false); preview.reset(); };
   const addCsvRows = () => {
     if (!canAddCsv) return;
-    setHoldings((cur) => [...cur, ...readyRows.map((r) => ({ rowId: crypto.randomUUID(), ticker: r.ticker, exchange: r.exchange as Exchange, instrumentType: r.instrumentType as InstrumentType, quantity: r.quantity }))]);
+    setHoldings((cur) => [...cur, ...readyRows.map((r) => ({ rowId: crypto.randomUUID(), ticker: r.ticker, exchange: r.exchange as Exchange, instrumentType: r.instrumentType as InstrumentType, quantity: r.quantity, sourceName: csvName }))]);
     setCsvNotice(`${readyRows.length} ${readyRows.length === 1 ? 'row' : 'rows'} added to this session.`);
     closeCsv(); setCsvError(''); invalidate();
   };
@@ -357,6 +357,20 @@ export default function PortfolioPage() {
 
   const feedLabel = universe.isLoading ? 'CHECKING' : universe.isError ? 'UNREACHABLE' : 'YAHOO // PROTOTYPE';
   const sysLabel = universe.isLoading ? 'SYS.CHECKING' : universe.isError ? 'SYS.OFFLINE' : 'SYS.ONLINE';
+  const importedFiles = [...new Set(holdings.flatMap((holding) => holding.sourceName ? [holding.sourceName] : []))];
+  const sharedPortfolio = <section className="pf-shared-portfolio" data-testid="panel-shared-portfolio">
+    <div className="pf-shared-heading">
+      <div><strong>{holdings.length ? `${holdings.length} holdings loaded from Portfolio` : 'Add holdings on Portfolio to begin'}</strong>
+        <p>{holdings.length
+          ? `${report ? 'Confirmed and inspected. ' : 'Confirmation and inspection needed on Portfolio. '}Every section uses these same session holdings. No additional CSV upload is needed.`
+          : 'Upload a CSV or enter holdings once on Portfolio; Crash Analytics, Risk Lab, Simulator and Reports all use that same portfolio.'}</p>
+        {importedFiles.length > 0 && <p data-testid="text-shared-csv-source">CSV source: {importedFiles.join(', ')}</p>}
+      </div>
+      <button type="button" className="pf-btn-quiet" onClick={() => go('portfolio')} data-testid="button-manage-shared-portfolio">{holdings.length ? 'Manage on Portfolio' : 'Go to Portfolio'}</button>
+    </div>
+    {holdings.length > 0 && <details><summary>View shared holdings</summary><div className="pf-table-wrap"><table className="pf-table"><thead><tr><th>Holding</th><th>Exchange</th><th>Type</th><th>Quantity entered</th></tr></thead><tbody>{holdings.map((holding) => <tr key={holding.rowId}><td>{holding.ticker}</td><td>{holding.exchange}</td><td>{holding.instrumentType}</td><td>{holding.quantity}</td></tr>)}</tbody></table></div></details>}
+    <p className="pf-shared-note">Session-only: switching sections keeps your holdings. Refreshing or closing this tab clears them.</p>
+  </section>;
 
   return <div className="pf-app">
     <aside className="pf-side">
@@ -374,15 +388,19 @@ export default function PortfolioPage() {
       </header>
 
       <main className="pf-main" hidden={station !== 'crash'}>
+        {station === 'crash' && sharedPortfolio}
         <CrashAnalytics key={report?.checkedAt ?? 'none'} holdings={apiHoldings} inspectionKey={report?.checkedAt} onReturn={() => go('portfolio')} onCompleted={() => mark(report?.checkedAt)('crash')} />
       </main>
       <main className="pf-main" hidden={station !== 'risklab'}>
+        {station === 'risklab' && sharedPortfolio}
         <RiskLab key={report?.checkedAt ?? 'none'} holdings={apiHoldings} inspectionKey={report?.checkedAt} onCompleted={() => mark(report?.checkedAt)('risk')} />
       </main>
       <main className="pf-main" hidden={station !== 'simulator'}>
+        {station === 'simulator' && sharedPortfolio}
         <Simulator key={report?.checkedAt ?? 'none'} holdings={apiHoldings} inspectionKey={report?.checkedAt} onResult={(r) => { publishResilience(report?.checkedAt)(r); if (r?.panicGame.status === 'revealed') mark(report?.checkedAt)('rehearsal'); }} />
       </main>
       <main className="pf-main pf-report-main" hidden={station !== 'report'}>
+        {station === 'report' && sharedPortfolio}
         <ReportPage key={report?.checkedAt ?? 'none'} holdings={apiHoldings} inspectionKey={report?.checkedAt} result={sessionResilience} onResult={publishResilience(report?.checkedAt)} onReturn={() => go('portfolio')} />
       </main>
       {station === 'crash' || station === 'risklab' || station === 'simulator' || station === 'report' ? null : station !== 'portfolio' ? <main className="pf-main"><div className="pf-await" data-testid="panel-awaiting-design">
