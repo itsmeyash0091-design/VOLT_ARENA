@@ -630,6 +630,28 @@ export const AnalyzePortfolioResilienceResponse = zod.object({
   "text": zod.string(),
   "wordCount": zod.number().int().max(analyzePortfolioResilienceResponseCrashCardWordCountMax)
 }),
+  "simulatedChoices": zod.object({
+  "kind": zod.enum(['simulated']),
+  "status": zod.enum(['available', 'unavailable']),
+  "horizonTradingDays": zod.number().int(),
+  "evaluatedScenarioCount": zod.number().int(),
+  "message": zod.string(),
+  "assumptions": zod.array(zod.string()),
+  "choices": zod.array(zod.object({
+  "id": zod.enum(['hold', 'trim', 'exit']),
+  "label": zod.string(),
+  "exposurePct": zod.number(),
+  "cashPct": zod.number(),
+  "marketValueInr": zod.number(),
+  "cashValueInr": zod.number(),
+  "worstLossInr": zod.number(),
+  "bestGainInr": zod.number(),
+  "tailLossInr": zod.number(),
+  "medianEndValueInr": zod.number(),
+  "withinLimitCount": zod.number().int().nullable(),
+  "coverageScorePct": zod.number().nullable()
+}))
+}),
   "notes": zod.array(zod.string())
 })
 

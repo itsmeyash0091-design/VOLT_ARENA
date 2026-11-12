@@ -732,6 +732,57 @@ export interface CrashCard {
   wordCount: number;
 }
 
+export type SimulatedExposureChoiceId = typeof SimulatedExposureChoiceId[keyof typeof SimulatedExposureChoiceId];
+
+
+export const SimulatedExposureChoiceId = {
+  hold: 'hold',
+  trim: 'trim',
+  exit: 'exit',
+} as const;
+
+export interface SimulatedExposureChoice {
+  id: SimulatedExposureChoiceId;
+  label: string;
+  exposurePct: number;
+  cashPct: number;
+  marketValueInr: number;
+  cashValueInr: number;
+  worstLossInr: number;
+  bestGainInr: number;
+  tailLossInr: number;
+  medianEndValueInr: number;
+  /** @nullable */
+  withinLimitCount: number | null;
+  /** @nullable */
+  coverageScorePct: number | null;
+}
+
+export type SimulatedExposureComparisonKind = typeof SimulatedExposureComparisonKind[keyof typeof SimulatedExposureComparisonKind];
+
+
+export const SimulatedExposureComparisonKind = {
+  simulated: 'simulated',
+} as const;
+
+export type SimulatedExposureComparisonStatus = typeof SimulatedExposureComparisonStatus[keyof typeof SimulatedExposureComparisonStatus];
+
+
+export const SimulatedExposureComparisonStatus = {
+  available: 'available',
+  unavailable: 'unavailable',
+} as const;
+
+export interface SimulatedExposureComparison {
+  kind: SimulatedExposureComparisonKind;
+  status: SimulatedExposureComparisonStatus;
+  horizonTradingDays: number;
+  evaluatedScenarioCount: number;
+  message: string;
+  assumptions: string[];
+  choices: SimulatedExposureChoice[];
+}
+
 export type ResilienceReportHistoryKind = typeof ResilienceReportHistoryKind[keyof typeof ResilienceReportHistoryKind];
 
 
@@ -774,6 +825,7 @@ export interface ResilienceReport {
   levels: PortfolioLevels;
   panicGame: PanicGameResult;
   crashCard: CrashCard;
+  simulatedChoices: SimulatedExposureComparison;
   notes: string[];
 }
 

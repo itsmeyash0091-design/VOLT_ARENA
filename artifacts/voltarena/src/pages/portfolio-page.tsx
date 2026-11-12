@@ -397,7 +397,7 @@ export default function PortfolioPage() {
       </main>
       <main className="pf-main" hidden={station !== 'simulator'}>
         {station === 'simulator' && sharedPortfolio}
-        <Simulator key={report?.checkedAt ?? 'none'} holdings={apiHoldings} inspectionKey={report?.checkedAt} onResult={(r) => { publishResilience(report?.checkedAt)(r); if (r?.panicGame.status === 'revealed') mark(report?.checkedAt)('rehearsal'); }} />
+        <Simulator key={report?.checkedAt ?? 'none'} holdings={apiHoldings} inspectionKey={report?.checkedAt} snapshot={valuation} onResult={(r) => { publishResilience(report?.checkedAt)(r); if (r?.panicGame.status === 'revealed') mark(report?.checkedAt)('rehearsal'); }} />
       </main>
       <main className="pf-main pf-report-main" hidden={station !== 'report'}>
         {station === 'report' && sharedPortfolio}

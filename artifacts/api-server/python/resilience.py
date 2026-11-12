@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 
 from crash_card import build_crash_card, rupees
+from panic_comparison import compare_exposures
 from cvar_par import empirical_cvar, solve_equal_cvar_par
 from engine import SOURCE, SOURCE_NOTE, PortfolioInputError, validate_holdings
 from scenarios import finite_number, input_error, library
@@ -120,6 +121,7 @@ def analyze_resilience(holdings: Any, options: dict[str, Any] | None = None,
             "reflection": reflection, "reflectionFeedback": None,
             "message": reason}
     count, digest, cvar_inr, par_inr, worst_inr = 0, None, None, None, None
+    sampled_losses_inr = None
     if value is not None and len(prepared["rows"]) >= MIN_SIMULATION_RETURNS and prepared["starts"] and prepared["historyKind"] != "insufficient":
         try:
             outcomes = hidden_returns(prepared["rows"], prepared["starts"], settings)
@@ -139,6 +141,7 @@ def analyze_resilience(holdings: Any, options: dict[str, Any] | None = None,
                 cvar_inr = current_cvar * value
                 par_inr = benchmark["cvar"] * value if benchmark["status"] == "available" else None
                 worst_inr = float(losses.max()) * value
+                sampled_losses_inr = losses * value
                 game.update({"status": "ready", "evaluatedScenarioCount": 500,
                              "message": "Enter a hypothetical rupee loss limit to reveal the adverse sampled outcome and compare the limit with all 500 outcomes. No holding changes are involved."})
                 if budget is not None:
@@ -163,6 +166,9 @@ def analyze_resilience(holdings: Any, options: dict[str, Any] | None = None,
         "coverageEnd": prepared["common"][-1] if prepared["common"] else None,
         "validReturnCount": len(prepared["rows"]), "excludedIntervalCount": prepared["excluded"],
         "instruments": prepared["instruments"], "levels": levels, "panicGame": game, "crashCard": card,
+        "simulatedChoices": compare_exposures(sampled_losses_inr, value, budget,
+                                              settings["confidencePct"] / 100,
+                                              settings["horizonTradingDays"], game["message"]),
         "notes": [SOURCE_NOTE,
                   "Figures are Python-generated from the same 500 fixed-seed simulated outcomes. Changing source data, confidence, or horizon can change the comparison. Operational timestamps are not financial outputs.",
                   "Missing intervals and calendar gaps over five days split source runs. No prices are filled; an independent exchange calendar has not been verified.",

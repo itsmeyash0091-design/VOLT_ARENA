@@ -12,6 +12,7 @@ import type { PortfolioLevels } from './portfolioLevels';
 import type { ResilienceReportCoverageStatus } from './resilienceReportCoverageStatus';
 import type { ResilienceReportHistoryKind } from './resilienceReportHistoryKind';
 import type { RiskInstrumentCoverage } from './riskInstrumentCoverage';
+import type { SimulatedExposureComparison } from './simulatedExposureComparison';
 
 export interface ResilienceReport {
   source: string;
@@ -36,5 +37,6 @@ export interface ResilienceReport {
   levels: PortfolioLevels;
   panicGame: PanicGameResult;
   crashCard: CrashCard;
+  simulatedChoices: SimulatedExposureComparison;
   notes: string[];
 }

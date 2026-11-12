@@ -41,6 +41,14 @@ The user requires the equal component-CVaR benchmark over current holdings only,
 
 **How to apply:** Preserve the distinction in future game/card copy. Solver status alone is not proof: nonsmooth/tied empirical CVaR can produce a limited-precision status even for a candidate passing independent tail-dual and equal-component checks. Never bypass or loosen those checks to force Levels to appear.
 
+## Simulated exposure-choice interpretation
+
+Hold/sell choices in the Simulator compare exposure set before the sampled horizon, not trades made after observing a trough. Compare all choices on the same hidden outcomes, including missed gains. Keep original holdings, panic coverage, Levels and Crash Card separate and unchanged.
+
+**Why:** Making the previously disabled controls functional must not imply executable timing, hindsight trading success or an alternative cash-based par benchmark. No five-year model was approved.
+
+**How to apply:** Preserve explicit simulated labels and timing, zero cash return and excluded fees/taxes/slippage/reinvestment. Do not invent an event path or long-term forecast from horizon-end samples.
+
 ## Live-source repeatability
 
 The same symbols, holdings, seed and coverage dates do not prove identical market-data inputs. Fresh Yahoo-backed requests produced different sampled-input digests and tiny high-precision risk differences while frozen-source runs matched across separate Python processes.

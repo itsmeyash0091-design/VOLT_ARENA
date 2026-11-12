@@ -1085,6 +1085,38 @@ components:
         text: {type: string}
         wordCount: {type: integer, maximum: 119}
       required: [templateVersion, header, findings, footer, text, wordCount]
+    SimulatedExposureChoice:
+      type: object
+      properties:
+        id: {type: string, enum: [hold, trim, exit]}
+        label: {type: string}
+        exposurePct: {type: number}
+        cashPct: {type: number}
+        marketValueInr: {type: number}
+        cashValueInr: {type: number}
+        worstLossInr: {type: number}
+        bestGainInr: {type: number}
+        tailLossInr: {type: number}
+        medianEndValueInr: {type: number}
+        withinLimitCount: {type: ["integer", "null"]}
+        coverageScorePct: {type: ["number", "null"]}
+      required: [id, label, exposurePct, cashPct, marketValueInr, cashValueInr, worstLossInr, bestGainInr, tailLossInr, medianEndValueInr, withinLimitCount, coverageScorePct]
+    SimulatedExposureComparison:
+      type: object
+      properties:
+        kind: {type: string, enum: [simulated]}
+        status: {type: string, enum: [available, unavailable]}
+        horizonTradingDays: {type: integer}
+        evaluatedScenarioCount: {type: integer}
+        message: {type: string}
+        assumptions:
+          type: array
+          items: {type: string}
+        choices:
+          type: array
+          items:
+            $ref: "#/components/schemas/SimulatedExposureChoice"
+      required: [kind, status, horizonTradingDays, evaluatedScenarioCount, message, assumptions, choices]
     ResilienceReport:
       type: object
       properties:
@@ -1112,8 +1144,10 @@ components:
           $ref: "#/components/schemas/PanicGameResult"
         crashCard:
           $ref: "#/components/schemas/CrashCard"
+        simulatedChoices:
+          $ref: "#/components/schemas/SimulatedExposureComparison"
         notes:
           type: array
           items: {type: string}
-      required: [source, checkedAt, valuationDate, portfolioValueInr, settings, evaluatedScenarioCount, hiddenScenarioDigest, historyKind, coverageStatus, coverageStart, coverageEnd, validReturnCount, excludedIntervalCount, instruments, levels, panicGame, crashCard, notes]
+      required: [source, checkedAt, valuationDate, portfolioValueInr, settings, evaluatedScenarioCount, hiddenScenarioDigest, historyKind, coverageStatus, coverageStart, coverageEnd, validReturnCount, excludedIntervalCount, instruments, levels, panicGame, crashCard, simulatedChoices, notes]
 
