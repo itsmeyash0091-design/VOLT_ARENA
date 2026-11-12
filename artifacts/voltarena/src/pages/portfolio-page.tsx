@@ -71,7 +71,14 @@ function Modal({ title, kicker, onClose, children }: { title: string; kicker: st
 export default function PortfolioPage() {
   const [station, setStation] = useState<StationId>(readHash);
   const universe = useGetMarketDataUniverse();
-  const preview = usePreviewPortfolioCsv();
+  const preview = usePreviewPortfolioCsv({
+    mutation: {
+      // Parsing is read-only: one retry can recover a temporary preview outage
+      // without adding holdings or repeating an analysis.
+      retry: (failureCount, error) => failureCount < 1 && /failed to fetch|networkerror|load failed/i.test(errorMessage(error)),
+      retryDelay: 750,
+    },
+  });
   const validate = useValidatePortfolioInput();
   const inspect = useInspectPortfolioMarketData();
   const levelRun = useAnalyzePortfolioResilience();

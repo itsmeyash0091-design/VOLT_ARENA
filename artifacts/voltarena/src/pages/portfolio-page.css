@@ -85,6 +85,8 @@ html, body { background: #0f131c; }
 .pf-icon-btn { color: var(--onv) !important; padding: 4px; }
 .pf-err { margin: 12px 0 0; color: var(--err); font-size: 12px; line-height: 16px; }
 .pf-err p { margin: 0 0 4px; }
+.pf-csv-error { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+.pf-csv-error .pf-err { flex: 1 1 220px; margin: 0; }
 .pf-ok { margin: 12px 0 0; color: var(--sec); font-size: 12px; }
 .pf-hint { margin: 12px 0 0; text-align: right; color: var(--onv); font-size: 12px; }
 
